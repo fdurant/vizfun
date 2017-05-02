@@ -1,0 +1,39 @@
+version: '2'
+services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy:0.6.0
+    container_name: vizfun-nginx_proxy
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    labels:
+      - "description=nginx reverse proxy server"
+
+  neo4j:
+    build:
+      context: .
+      dockerfile: neo4j/Dockerfile
+    container_name: vizfun-official_neo4j_plus_apoc
+    env_file:
+      - .env
+    environment:
+      - dbms.memory.heap.initial_size=2048
+      - NEO4J_HEAP_MEMORY=2048
+      - NEO4J_CACHE_MEMORY=1G
+    cap_add:
+      - SYS_RESOURCE
+    ports:
+      - "7474:7474"
+    expose:
+      - "7687"
+    labels:
+      - "description=Neo4J graph database server, including APOC library"
+
+  neo4jloader:
+    build:
+      context: .
+      dockerfile: neo4jloader/Dockerfile
+    container_name: vizfun_neo4jloader
+    env_file:
+      - .env
+    links:
+      - neo4j

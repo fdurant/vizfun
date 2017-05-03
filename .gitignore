@@ -91,5 +91,8 @@ ENV/
 # Emacs backup files
 *~
 
+# Node.js
+node_modules
+
 # Project specific
 .env

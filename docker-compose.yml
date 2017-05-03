@@ -1,12 +1,14 @@
 version: '2'
 services:
-  nginx-proxy:
-    image: jwilder/nginx-proxy:0.6.0
-    container_name: vizfun-nginx_proxy
-    volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
+  node:
+    build:
+      context: .
+      dockerfile: node/Dockerfile
+    container_name: vizfun-node
+    ports:
+      - "8000:8000"
     labels:
-      - "description=nginx reverse proxy server"
+      - "description=node.js"
 
   neo4j:
     build:
@@ -20,7 +22,7 @@ services:
       - NEO4J_HEAP_MEMORY=2048
       - NEO4J_CACHE_MEMORY=1G
     cap_add:
-      - SYS_RESOURCE
+      - SYS_RESOURCE 
     ports:
       - "7474:7474"
     expose:

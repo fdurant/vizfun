@@ -1,15 +1,5 @@
 version: '2'
 services:
-  node:
-    build:
-      context: .
-      dockerfile: node/Dockerfile
-    container_name: vizfun-node
-    ports:
-      - "8000:8000"
-    labels:
-      - "description=node.js"
-
   neo4j:
     build:
       context: .
@@ -18,13 +8,14 @@ services:
     env_file:
       - .env
     environment:
-      - dbms.memory.heap.initial_size=2048
-      - NEO4J_HEAP_MEMORY=2048
-      - NEO4J_CACHE_MEMORY=1G
+      - NEO4J_dbms_memory_heap_maxSize=1500M
+      - NEO4J_dbms_connectors_default__listen__address=0.0.0.0
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
     cap_add:
       - SYS_RESOURCE 
     ports:
       - "7474:7474"
+      - "7687:7687"
     expose:
       - "7687"
     labels:
@@ -35,6 +26,20 @@ services:
       context: .
       dockerfile: neo4jloader/Dockerfile
     container_name: vizfun_neo4jloader
+    env_file:
+      - .env
+    links:
+      - neo4j
+
+  node:
+    build:
+      context: .
+      dockerfile: node/Dockerfile
+    container_name: vizfun_node
+    ports:
+      - "80:8000"
+    labels:
+      - "description=node.js"
     env_file:
       - .env
     links:

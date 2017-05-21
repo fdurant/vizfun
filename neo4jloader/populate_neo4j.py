@@ -8,7 +8,7 @@ neo4j_uid, neo4j_pwd = os.environ['NEO4J_AUTH'].split('/')
 
 secondsToSleep = 10
 
-for i in range(5,0,-1):
+for i in range(10,0,-1):
     try:
         driver = GraphDatabase.driver("bolt://neo4j:7687", auth=basic_auth(neo4j_uid, neo4j_pwd))
         session = driver.session()

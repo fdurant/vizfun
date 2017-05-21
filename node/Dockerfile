@@ -1,4 +1,4 @@
-FROM node:7.9.0
+FROM node:6.2.0
 MAINTAINER Frederik Durant <frederik.durant@pandora.be>
 
 # Prepare app directory
@@ -17,3 +17,4 @@ EXPOSE 8000
 
 # Start the app
 CMD npm start
+

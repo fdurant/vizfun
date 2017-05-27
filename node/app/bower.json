@@ -1,0 +1,29 @@
+{
+    "name": "music visualization fun",
+    "version": "1.0.0",
+    "description": "website for visualizing music in a fun way",
+    "main": "index.html",
+    "moduleType": [],
+    "keywords": [
+	"spotify",
+	"music",
+	"graph",
+	"visualization"
+    ],
+    "authors": [
+	"Frederik Durant"
+    ],
+    "homepage": "http://music.viz.fun/",
+    "ignore": [
+	"**/.*",
+	"node_modules",
+	"bower_components",
+	"test",
+	"tests"
+    ],
+    "dependencies": {
+	"bootstrap": "~3.3.5",
+	"font-awesome": "~4.4.0",
+	"angular": "~1.4.7"
+    }
+}

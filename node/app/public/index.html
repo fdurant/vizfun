@@ -1,0 +1,25 @@
+<html ng-app="">
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Blank viz</title>
+    <link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../bower_components/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="../bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="styles/bootstrap-social.css" rel="stylesheet">
+    <link href="styles/mystyles.css" rel="stylesheet">
+    <script src="../bower_components/angular/angular.min.js"></script>
+  </head>
+
+  <body>
+    <h1>Blank viz</h1>
+
+    <div class="someClass" ng-init="whatever={comment:''}"></div>
+
+    <p>Hello {{whatever.comment}}</p>
+    <input type="text" ng-model="whatever.comment"/>
+  </body>
+  
+</html>

@@ -7,7 +7,9 @@ ADD ./node/app /usr/src/app/
 
 # Install dependencies
 WORKDIR /usr/src/app
-RUN npm install
+RUN npm install -g bower && \
+    npm install && \
+    bower install --config.interactive=false --allow-root
 
 # Build the app
 RUN npm build

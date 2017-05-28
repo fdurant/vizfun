@@ -23,3 +23,37 @@
     color:floralwhite;
     
 }
+
+body {
+    align:center;
+    padding:50px 0px 0px 0px; /* To avoid navbar at the top from being hidden when user scrolls page */
+    z-index:0
+}
+
+.navbar-inverse {
+    background: #303F9F;
+}
+
+.navbar-inverse .navbar-nav > .active > a,
+.navbar-inverse .navbar-nav > .active > a:hover,
+.navbar-inverse .navbar-nav > .active > a:focus {
+    color: #fff;
+    background: #1A237E;
+}
+
+.navbar-inverse .navbar-nav > .open > a,
+.navbar-inverse .navbar-nav > .open > a:hover,
+.navbar-inverse .navbar-nav > .open > a:focus {
+    color: #fff;
+    background: #1A237E;
+}
+
+.navbar-inverse .navbar-nav .open .drop-down-menu > li > a,
+.navbar-inverse .navbar-nav .open .drop-down-menu {
+    background-color: #303F9F;
+    color:#eeeeee;
+}
+
+.navbar-inverse .navbar-nav .open .drop-down-menu > li > a:hover {
+    color:#000000;
+}

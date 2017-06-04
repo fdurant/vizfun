@@ -13,6 +13,7 @@
 	"spotify-web-api-node": "^2.4.0",
 	"request": "2.81.0",
 	"querystring": "0.2.0",
-	"cookie-parser": "1.4.3"
+	"cookie-parser": "1.4.3",
+	"likely":"0.2.0"
     }
 }

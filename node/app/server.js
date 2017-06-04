@@ -2,21 +2,16 @@
 
 const express = require('express');
 const morgan = require('morgan');
-const SpotifyWebApi = require('spotify-web-api-node');
 const generateRandomString = require('./helpers/utils.js').generateRandomString;
 var request = require('request');
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
+const SpotifyWebApi = require('spotify-web-api-node');
+var spotifyApi = new SpotifyWebApi({});
 
 const client_id = process.env.SPOTIFY_CLIENT_ID;
 const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
 const redirect_uri = process.env.APP_REDIRECT_PATH;
-
-// Examples from https://github.com/thelinmichael/spotify-web-api-node
-
-// credentials are optional
-var spotifyApi = new SpotifyWebApi({
-});
 
 // Constants
 const PORT = 8000;
@@ -87,23 +82,20 @@ app.get('/callback', function(req, res) {
 		var access_token = body.access_token,
 		    refresh_token = body.refresh_token;
 
-		var options = {
-		    url: 'https://api.spotify.com/v1/me',
-		    headers: { 'Authorization': 'Bearer ' + access_token },
-		    json: true
-		};
-
-		// use the access token to access the Spotify Web API
-		request.get(options, function(error, response, body) {
-		    console.log(body);
-		});
+		// STORE AS COOKIE FOR LATER USE
+		res.cookie('spotifyAccessTokenForMusicVizFun', access_token, { maxAge: 86400, httpOnly: true });
+		spotifyApi.setAccessToken(access_token);
 
 		// we can also pass the token to the browser to make requests from there
-		res.redirect('/#' +
+/*		res.redirect('/#' +
 			     querystring.stringify({
 				 access_token: access_token,
 				 refresh_token: refresh_token
 			     }));
+*/
+
+		res.redirect('/me'); 
+
 	    } else {
 		res.redirect('/#' +
 			     querystring.stringify({
@@ -112,7 +104,24 @@ app.get('/callback', function(req, res) {
 	    }
 	});
     }
+
 });
+
+app.get('/me', function(req, res) {
+
+    var me = spotifyApi.getMe()
+	.then(function(data) {
+	    console.log('Some information about the authenticated user', data.body);
+	    console.log('data.body.id = ', data.body.id);
+	    res.cookie('spotifyCurrentUserId', data.body.id, { maxAge: 86400, httpOnly: true });
+	    res.redirect('/playlists'); 
+	}, function(err) {
+	    console.log('Something went wrong!', err);
+	    res.redirect('/#');
+	});
+	
+});
+
 
 app.get('/refresh_token', function(req, res) {
 
@@ -136,6 +145,21 @@ app.get('/refresh_token', function(req, res) {
 	    });
 	}
     });
+});
+
+app.get('/playlists', function(req, res) {
+
+    var currentUserId = req.cookies.spotifyCurrentUserId;
+    
+    var playlists = spotifyApi.getUserPlaylists(currentUserId)
+	.then(function(data) {
+	    console.log('Retrieved user playlists: ', data.body);
+	},function(err) {
+	    console.log('Something went wrong!', err);
+	});
+    
+    res.redirect('/#');
+
 });
 
 app.use('/bower_components',  express.static(__dirname + '/bower_components'));

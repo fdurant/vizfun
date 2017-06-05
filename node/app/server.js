@@ -118,10 +118,13 @@ app.get('/me', function(req, res) {
 	    console.log('Some information about the authenticated user', data.body);
 	    console.log('data.body.id = ', data.body.id);
 	    res.cookie('spotifyCurrentUserId', data.body.id, { maxAge: 86400, httpOnly: true });
-	    res.redirect('/playlists'); 
+	    //	    res.redirect('/playlists'); 
+//	    res.redirect('/#'); 
+	    res.send(data);
 	}, function(err) {
 	    console.log('Something went wrong!', err);
-	    res.redirect('/#');
+	    res.send({'err': err});
+//	    res.redirect('/#');
 	});
 	
 });

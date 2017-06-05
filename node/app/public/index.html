@@ -83,7 +83,7 @@
 	  </ul>
 	  
 	  <ul class="nav navbar-nav navbar-right" ng-controller="MusicVizFunController">
-	    <div class="loggedin-user">
+	    <div ng-show="userIsLoggedIn" class="loggedin-user">
 	      <img src="{{urlOfLoggedInUserImage}}" width="30" height="30" class="img-circle" alt="photo of {{loggedInUserName}}"></img>
 	      <span class="loggedin-username">{{loggedInUserName}}</span>
 	    </div>
@@ -128,8 +128,8 @@
     </div-->
       
     <!-- Next elements all copied from https://github.com/spotify/web-api-auth-examples/blob/master/authorization_code/public/index.html -->
-    <div class="container">
-      <div id="login" class="text-center">
+    <div class="container" ng-controller="MusicVizFunController">
+      <div id="login" class="text-center" ng-hide="userIsLoggedIn">
 	<!--h1>This is an example of the Authorization Code flow</h1-->
 	<a href="/login" class="btn btn-primary btn-lg">Log in with Spotify</a>
       </div>

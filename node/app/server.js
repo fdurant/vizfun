@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const generateRandomString = require('./helpers/utils.js').generateRandomString;
 var request = require('request');
 var querystring = require('querystring');
+const util = require('util');
 var cookieParser = require('cookie-parser');
 const SpotifyWebApi = require('spotify-web-api-node');
 var spotifyApi = new SpotifyWebApi({});
@@ -84,7 +85,9 @@ app.get('/callback', function(req, res) {
 
 		// STORE AS COOKIE FOR LATER USE
 		res.cookie('spotifyAccessTokenForMusicVizFun', access_token, { maxAge: 86400, httpOnly: true });
+		res.cookie('spotifyRefreshTokenForMusicVizFun', refresh_token, { maxAge: 86400, httpOnly: true });
 		spotifyApi.setAccessToken(access_token);
+		spotifyApi.setRefreshToken(refresh_token);
 
 		// we can also pass the token to the browser to make requests from there
 /*		res.redirect('/#' +
@@ -153,7 +156,68 @@ app.get('/playlists', function(req, res) {
     
     var playlists = spotifyApi.getUserPlaylists(currentUserId)
 	.then(function(data) {
-	    console.log('Retrieved user playlists: ', data.body);
+	    console.log('Retrieved user playlists: ');
+	    console.log(util.inspect(data.body, false, null))
+	},function(err) {
+	    console.log('Something went wrong!', err);
+	});
+    
+    res.redirect('/#');
+
+});
+
+app.get('/playlist/:playlistid?', function(req, res) {
+
+    var currentUserId = req.cookies.spotifyCurrentUserId;
+    var playlistId = req.params.playlistid;
+    
+    var playlist = spotifyApi.getPlaylistTracks(currentUserId, playlistId, req.query)
+	.then(function(data) {
+	    console.log('Retrieved user playlist ' + playlistId + ': ');
+	    console.log(util.inspect(data.body, false, null))
+	},function(err) {
+	    console.log('Something went wrong!', err);
+	});
+    
+    res.redirect('/#');
+
+});
+
+app.get('/artist/:artistid', function(req, res) {
+
+    var artistId = req.params.artistid;
+    
+    var artist = spotifyApi.getArtist(artistId)
+	.then(function(data) {
+	    console.log('Retrieved artist ' + artistId + ': ');
+	    console.log(util.inspect(data.body, false, null))
+	},function(err) {
+	    console.log('Something went wrong!', err);
+	});
+    
+    res.redirect('/#');
+
+});
+
+// Get multiple artists in one go. The response contains a.o. genre info about these artists
+// http://music.viz.fun/artists?aid=3mQBpAOMWYqAZyxtyeo4Lo&aid=3oZa8Xs6IjlIUGLAhVyK4G
+app.get('/artists?', function(req, res) {
+
+    // First assemble the artist IDs in one array
+    var artistIds = [];
+
+    if (typeof req.query.aid === 'string') {
+	artistIds.push(req.query.aid);
+    }
+    else {
+	artistIds = Array.from(req.query.aid);
+    }
+    
+    
+    var artists = spotifyApi.getArtists(artistIds)
+	.then(function(data) {
+	    console.log('Retrieved artists [' + artistIds.join(',') + ']: ');
+	    console.log(util.inspect(data.body, false, null))
 	},function(err) {
 	    console.log('Something went wrong!', err);
 	});

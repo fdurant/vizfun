@@ -1,4 +1,4 @@
-<html ng-app="">
+<html ng-app="musicVizFunApp">
 
   <head>
     <meta charset="utf-8">
@@ -82,10 +82,14 @@
 	    </li>
 	  </ul>
 	  
-	  <!--ul class="nav navbar-nav navbar-right">
-	    <li><a href="/login" class="btn btn-primary">Log in with Spotify</a></li>
-	    <li><a href="#">Contact</a></li>
-	  </ul-->
+	  <ul class="nav navbar-nav navbar-right" ng-controller="MusicVizFunController">
+	    <div class="loggedin-user">
+	      <img src="{{urlOfLoggedInUserImage}}" width="30" height="30" class="img-circle" alt="photo of {{loggedInUserName}}"></img>
+	      <span class="loggedin-username">{{loggedInUserName}}</span>
+	    </div>
+	    <!--li><a href="/login" class="btn btn-primary">Log in with Spotify</a></li>
+	    <li><a href="#">Contact</a></li-->
+	  </ul>
 	  
 	</div><!-- id="navbar "-->
 	  
@@ -277,6 +281,8 @@
     <!-- Include all compiled plugins (below), or inclide individual files as needed-->
     <script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 
-  </body>
+    <script src="app.js"></script>
+
+</body>
   
 </html>

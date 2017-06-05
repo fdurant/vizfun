@@ -80,8 +80,8 @@ app.get('/callback', function(req, res) {
 	request.post(authOptions, function(error, response, body) {
 	    if (!error && response.statusCode === 200) {
 
-		var access_token = body.access_token,
-		    refresh_token = body.refresh_token;
+		var access_token = body.access_token;
+		var refresh_token = body.refresh_token;
 
 		// STORE AS COOKIE FOR LATER USE
 		res.cookie('spotifyAccessTokenForMusicVizFun', access_token, { maxAge: 86400, httpOnly: true });
@@ -97,7 +97,8 @@ app.get('/callback', function(req, res) {
 			     }));
 */
 
-		res.redirect('/me'); 
+//		res.redirect('/me'); 
+		res.redirect('/#'); 
 
 	    } else {
 		res.redirect('/#' +

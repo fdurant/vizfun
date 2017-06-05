@@ -26,7 +26,7 @@
 
 body {
     align:center;
-    padding:50px 0px 0px 0px; /* To avoid navbar at the top from being hidden when user scrolls page */
+    padding:50px 0px 50px 0px; /* To avoid navbar at the top and at the bottom from being hidden when user scrolls page */
     z-index:0
 }
 

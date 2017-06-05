@@ -14,7 +14,11 @@
 
     <!-- Copied from https://github.com/spotify/web-api-auth-examples/blob/master/authorization_code/public/index.html -->
     <style type="text/css">
-      #login, #loggedin {
+      #login {
+        padding-top: 50px;
+        padding-bottom: 50px;
+      }
+      #loggedin {
         display: none;
       }
       .text-overflow {
@@ -121,9 +125,9 @@
       
     <!-- Next elements all copied from https://github.com/spotify/web-api-auth-examples/blob/master/authorization_code/public/index.html -->
     <div class="container">
-      <div id="login">
+      <div id="login" class="text-center">
 	<!--h1>This is an example of the Authorization Code flow</h1-->
-	<a href="/login" class="btn btn-primary">Log in with Spotify</a>
+	<a href="/login" class="btn btn-primary btn-lg">Log in with Spotify</a>
       </div>
       <div id="loggedin">
 	<div id="user-profile">
@@ -247,22 +251,26 @@
 
     </script>
 
-    <footer>
+    <nav class="navbar navbar-fixed-bottom">
 
-      <div class="container">
+      <footer>
 
-	<div class="row row-footer">
+	<div class="container">
 
-	  <div class="col-xs-4" style="align:center">&copy; Frederik Durant, 2017</div>
-	  <div class="col-xs-4" style="align:center"><i class="fa fa-envelope"></i>: music@viz.fun</div>
-	  <div class="col-xs-4" style="align:center"><a class="btn btn-social-icon btn-linkedin" href="http://linkedin.com/in/fdurant"><i class="fa fa-linkedin"></i></a></div>
+	  <div class="row row-footer">
 
+	    <div class="col-xs-4" style="align:center">&copy; Frederik Durant, 2017</div>
+	    <div class="col-xs-4" style="align:center"><i class="fa fa-envelope"></i>: music@viz.fun</div>
+	    <div class="col-xs-4" style="align:center"><a class="btn btn-social-icon btn-linkedin" href="http://linkedin.com/in/fdurant"><i class="fa fa-linkedin"></i></a></div>
+
+	  </div>
+	  
 	</div>
+	
+      </footer>
+
+    </nav>
       
-      </div>
-
-    </footer>
-
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="../bower_components/jquery/dist/jquery.min.js"></script>
 

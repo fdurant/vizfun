@@ -57,3 +57,7 @@ body {
 .navbar-inverse .navbar-nav .open .drop-down-menu > li > a:hover {
     color:#000000;
 }
+
+.login {
+    padding: 10px 10px 10px 10px;
+}

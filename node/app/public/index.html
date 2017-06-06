@@ -84,7 +84,7 @@
 	  
 	  <ul class="nav navbar-nav navbar-right" ng-controller="MusicVizFunController">
 	    <div ng-show="userIsLoggedIn" class="loggedin-user">
-	      <img src="{{urlOfLoggedInUserImage}}" width="30" height="30" class="img-circle" alt="photo of {{loggedInUserName}}"></img>
+	      <img ng-src="{{urlOfLoggedInUserImage}}" width="30" height="30" class="img-circle" alt="photo of {{loggedInUserName}}"></img>
 	      <span class="loggedin-username">{{loggedInUserName}}</span>
 	    </div>
 	    <!--li><a href="/login" class="btn btn-primary">Log in with Spotify</a></li>

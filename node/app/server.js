@@ -163,11 +163,13 @@ app.get('/playlists', function(req, res) {
 	.then(function(data) {
 	    console.log('Retrieved user playlists: ');
 	    console.log(util.inspect(data.body, false, null))
+	    res.send(data.body.items);
 	},function(err) {
-	    console.log('Something went wrong!', err);
+	    console.log('Could not get user playlists!', err);
+	    res.send(null);
 	});
     
-    res.redirect('/#');
+//    res.redirect('/#');
 
 });
 

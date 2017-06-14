@@ -32,7 +32,7 @@
 
   </head>
 
-  <body ng-controller="MusicVizFunController">
+  <body ng-controller="LoginController">
 
     <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
 
@@ -256,6 +256,39 @@
 
     </script>
 
+
+    <div class="container" ng-show="userIsLoggedIn">
+
+      <div class="row row-header">
+
+	<div class="col-xs-3">
+
+	  <nav class="navbar navbar-playlist navbar-fixed-left" role="navigation" ng-controller="PlaylistController">
+	    <div class="container">
+	      <div class="form-group">
+
+		<!-- Inspired by https://docs.angularjs.org/api/ng/input/input%5Bcheckbox%5D -->
+		<div class="checkbox navbar-btn" ng-repeat="p in playlists track by $index">
+		  <label>
+		    <input type="checkbox" class="autosubmit" ng-model="checkboxModel[$index]" id="{{p.id}}">
+		    {{p.name}}
+	            </input>
+		  </label>
+		</div>
+	      </div>
+	    </div>
+	  </nav>
+
+	</div>
+
+	<div class="col-xs-9"  style="border-width:1px; border-color:red; border-style:solid">
+	  5/6
+	</div>
+	
+      </div>
+
+    </div>
+    
     <nav class="navbar navbar-fixed-bottom">
 
       <footer>

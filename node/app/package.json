@@ -15,6 +15,7 @@
 	"querystring": "0.2.0",
 	"util": "0.10.3",
 	"cookie-parser": "1.4.3",
-	"likely":"0.2.0"
+	"likely":"0.2.0",
+	"linkurious":"1.5.2"
     }
 }

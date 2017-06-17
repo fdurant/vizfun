@@ -71,7 +71,7 @@ angular.module('musicVizFunApp', [])
 	$scope.playlists = [];
 
 	// Inspired by https://docs.angularjs.org/api/ng/input/input%5Bcheckbox%5D
-	$scope.checboxModel = [];
+	$scope.checkboxModel = [];
 	
 	// Only start retrieving the playlists when the user has successfully logged in
 	$scope.$watch(function() {return $rootScope.userIsLoggedIn},
@@ -91,6 +91,26 @@ angular.module('musicVizFunApp', [])
 			  }
 		      });
 
+	$scope.logPlaylists = function(i) {
+	    $log.log("playlist with index=" + i + " and ID=" + $scope.playlists[i].id + " changed status: checkboxModel = ",  $scope.checkboxModel)
+	};
+
+	// List of lists. If there are N playlists, there are N elements in this list.
+	$scope.playlistTracks = [];
+
+	$scope.getPlaylistTracksByIndex = function(i) {
+	    return $scope.getPlaylistTracksByID(i, $scope.playlists[i].id);
+	}
+
+	$scope.getPlaylistTracksByID = function(i,id) {
+	    var getPlaylistTracks = dataService.getPlaylistTracks(id)
+		.then(function (response) {
+		    $scope.playlistTracks[i] = response.data;
+		    $log.log("Retrieve playlist with ID=" + id);
+		    $log.log("playlistTracks = ", $scope.playlistTracks)
+		});
+	}
+	    
 	$scope.graph = {
 	    "nodes": [
 		{
@@ -140,6 +160,11 @@ angular.module('musicVizFunApp', [])
 	    graph: $scope.graph,
 	    container: 'graph-container'
 	});
+
+	$scope.refreshGraph = function() {
+	    $scope.s.refresh();
+	    $log.log("refreshed graph")
+	};
 	
     }])
 
@@ -151,6 +176,10 @@ angular.module('musicVizFunApp', [])
 
 	this.getMe = function() {
 	    return $http.get("/me");
+	}
+
+	this.getPlaylistTracks = function(playlistID) {
+	    return $http.get("/playlist/" + playlistID);
 	}
 
     });

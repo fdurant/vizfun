@@ -181,12 +181,14 @@ app.get('/playlist/:playlistid?', function(req, res) {
     var playlist = spotifyApi.getPlaylistTracks(currentUserId, playlistId, req.query)
 	.then(function(data) {
 	    console.log('Retrieved user playlist ' + playlistId + ': ');
-	    console.log(util.inspect(data.body, false, null))
+//	    console.log(util.inspect(data.body, false, null))
+	    res.send(data.body.items);
 	},function(err) {
 	    console.log('Something went wrong!', err);
+	    res.send(null);
 	});
     
-    res.redirect('/#');
+//    res.redirect('/#');
 
 });
 

@@ -271,7 +271,12 @@
 	      <!-- Inspired by https://docs.angularjs.org/api/ng/input/input%5Bcheckbox%5D -->
 	      <div class="checkbox navbar-btn" ng-repeat="p in playlists track by $index">
 		<label>
-		  <input type="checkbox" class="autosubmit" ng-model="checkboxModel[$index]" id="{{p.id}}">
+		  <input type="checkbox"
+			 class="autosubmit"
+			 ng-model="checkboxModel[$index]"
+			 id="{{p.id}}"
+			 ng-init="getPlaylistTracksByIndex($index)"
+			 ng-change="logPlaylists($index)">
 		  {{p.name}}
 	            </input>
 		</label>
@@ -285,6 +290,7 @@
 
 	  <!-- Inspired by https://jsfiddle.net/6voan7k9/ -->
 	  <div id="graph-container" style="top:0px; bottom:0; left:0; right:0; margin:20px; position:absolute"></div>
+	  <button class="btn btn-default" style="top:10px;" id="refresh-graph" ng-click="refreshGraph()">Refresh</button>
 	  
 	</div>
 	

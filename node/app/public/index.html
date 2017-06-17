@@ -270,13 +270,14 @@
 
 	      <!-- Inspired by https://docs.angularjs.org/api/ng/input/input%5Bcheckbox%5D -->
 	      <div class="checkbox navbar-btn" ng-repeat="p in playlists track by $index">
-		<label>
+		<label style="margin-top:10px;"">
 		  <input type="checkbox"
 			 class="autosubmit"
 			 ng-model="checkboxModel[$index]"
 			 id="{{p.id}}"
 			 ng-init="getPlaylistTracksByIndex($index);"
 			 ng-change="logPlaylists($index)">
+		  <img ng-src="{{p.images[0].url}}" width="120" height="120" class="img-rounded" alt="photo of {{p.name}}"></img>
 		  {{p.name}}
 	            </input>
 		</label>

@@ -68,7 +68,16 @@ angular.module('musicVizFunApp', [])
 
     .controller('PlaylistController', ['$scope', '$rootScope', '$http', '$log', '$timeout', 'dataService', function($scope, $rootScope, $http, $log, $timeout, dataService) {
 	
+	// List of strings
 	$scope.playlists = [];
+	// List of lists. If there are N playlists, there are N elements in this list.
+	$scope.playlistTracks = [];
+	// List of sets. If there are N playlists, there are N elements in this list.
+	$scope.playlistArtistIDs = [];
+
+	// Tracks and artists from playlists, accessible by ID
+	$scope.playlistTracksByIDs = {};
+	$scope.playlistArtistsByIDs = {};
 
 	// Inspired by https://docs.angularjs.org/api/ng/input/input%5Bcheckbox%5D
 	$scope.checkboxModel = [];
@@ -81,8 +90,16 @@ angular.module('musicVizFunApp', [])
 			      $log.log('Retrieving playlists');
 			      $scope.getPlaylists = dataService.getPlaylists()
 				  .then(function (response) {
-				      $scope.playlists = response.data;
-				      $scope.checkboxModel = Array($scope.playlists.length).fill(true)
+				      $scope.playlists = response.data.items;
+				      $scope.checkboxModel = Array($scope.playlists.length).fill(false)
+				      for (var c=0; c<$scope.playlists.length; c++) { 
+					  if (c==0) {
+					      $scope.checkboxModel[c] = true;
+					  }
+					  // Initialize
+					  $scope.playlistTracks[c] = [];
+					  $scope.playlistArtistIDs[c] = new Set();
+				      }
 				      $log.log("playlists = ", $scope.playlists)
 				  });
 			  }
@@ -92,25 +109,62 @@ angular.module('musicVizFunApp', [])
 		      });
 
 	$scope.logPlaylists = function(i) {
-	    $log.log("playlist with index=" + i + " and ID=" + $scope.playlists[i].id + " changed status: checkboxModel = ",  $scope.checkboxModel)
+	    $log.log("playlist with index=" + i + " and ID=" + $scope.playlists[i].id + " changed status: checkboxModel = ",  $scope.checkboxModel);
+	    $log.log("playlistArtistsByIDs = ", $scope.playlistArtistsByIDs);
 	};
 
-	// List of lists. If there are N playlists, there are N elements in this list.
-	$scope.playlistTracks = [];
-
 	$scope.getPlaylistTracksByIndex = function(i) {
-	    return $scope.getPlaylistTracksByID(i, $scope.playlists[i].id);
+	    return $scope.getPlaylistTracksByID(i, $scope.playlists[i].id,0,80);
 	}
 
-	$scope.getPlaylistTracksByID = function(i,id) {
-	    var getPlaylistTracks = dataService.getPlaylistTracks(id)
+	$scope.getPlaylistTracksByID = function(i,id,offset,increment) {
+	    var getPlaylistTracks = dataService.getPlaylistTracks(id,offset,increment)
 		.then(function (response) {
-		    $scope.playlistTracks[i] = response.data;
-		    $log.log("Retrieve playlist with ID=" + id);
-		    $log.log("playlistTracks = ", $scope.playlistTracks)
+
+		    // Extend lists of playtracks
+		    $scope.playlistTracks[i].push.apply($scope.playlistTracks[i],response.data.items);
+		    $log.log("Retrieved playlist with ID=" + id);
+		    $log.log("playlistTracks[" + i + "] = ", $scope.playlistTracks[i]);
+
+		    // Assemble artistIDs for current batch of tracks
+		    var batchOfArtistsIDs = new Set();
+		    for (var j=0; j<response.data.items.length; j++) {
+			// Store each track for direct search by its ID
+			$scope.playlistTracksByIDs[response.data.items[j].track.id] = response.data.items[j];
+			// There can be more than one artist per track
+			if (response.data.items[j].track && response.data.items[j].track.artists) {
+			    for (var a=0; a<response.data.items[j].track.artists.length; a++) {
+				var artistID = response.data.items[j].track.artists[a].id;
+				$scope.playlistArtistIDs[i].add(artistID);
+				batchOfArtistsIDs.add(artistID);
+			    }
+			}
+		    }
+
+		    $scope.getMultipleArtists(Array.from(batchOfArtistsIDs));
+		    
+		    $log.log("playlistArtistIDs[" + i + "] = ", $scope.playlistArtistIDs[i]);
+		    $log.log("playlistTracksByIDs = ", $scope.playlistTracksByIDs);
+		    if (response.data.next) {
+			// There's more => recursive call
+			$scope.getPlaylistTracksByID(i,id,offset+increment,increment);
+		    }
 		});
 	}
-	    
+
+	$scope.getMultipleArtists = function(listOfArtistIDs) {
+	    var getMultipleArtists = dataService.getMultipleArtists(listOfArtistIDs)
+		.then(function (response) {
+		    if (response.data.artists) {
+			for (var a=0; a<response.data.artists.length; a++) {
+			    var artistID = response.data.artists[a].id;
+			    $scope.playlistArtistsByIDs[artistID] = response.data.artists[a];
+			}
+		    }
+		    
+		});
+	}
+
 	$scope.graph = {
 	    "nodes": [
 		{
@@ -178,8 +232,12 @@ angular.module('musicVizFunApp', [])
 	    return $http.get("/me");
 	}
 
-	this.getPlaylistTracks = function(playlistID) {
-	    return $http.get("/playlist/" + playlistID);
+	this.getPlaylistTracks = function(playlistID, offset, limit) {
+	    return $http.get("/playlist/" + playlistID + "?offset=" + offset + "&limit=" + limit + "&fields=items,next");
+	}
+
+	this.getMultipleArtists = function (listOfArtistIDs) {
+	    return $http.get("/artists?aid=" + listOfArtistIDs.join(',') + "&fields=items,next");
 	}
 
     });

@@ -163,7 +163,7 @@ app.get('/playlists', function(req, res) {
 	.then(function(data) {
 	    console.log('Retrieved user playlists: ');
 	    console.log(util.inspect(data.body, false, null))
-	    res.send(data.body.items);
+	    res.send(data.body);
 	},function(err) {
 	    console.log('Could not get user playlists!', err);
 	    res.send(null);
@@ -182,7 +182,7 @@ app.get('/playlist/:playlistid?', function(req, res) {
 	.then(function(data) {
 	    console.log('Retrieved user playlist ' + playlistId + ': ');
 //	    console.log(util.inspect(data.body, false, null))
-	    res.send(data.body.items);
+	    res.send(data.body);
 	},function(err) {
 	    console.log('Something went wrong!', err);
 	    res.send(null);
@@ -200,11 +200,13 @@ app.get('/artist/:artistid', function(req, res) {
 	.then(function(data) {
 	    console.log('Retrieved artist ' + artistId + ': ');
 	    console.log(util.inspect(data.body, false, null))
+	    res.send(data.body);
 	},function(err) {
 	    console.log('Something went wrong!', err);
+	    res.send(null);
 	});
     
-    res.redirect('/#');
+//    res.redirect('/#');
 
 });
 
@@ -226,12 +228,14 @@ app.get('/artists?', function(req, res) {
     var artists = spotifyApi.getArtists(artistIds)
 	.then(function(data) {
 	    console.log('Retrieved artists [' + artistIds.join(',') + ']: ');
-	    console.log(util.inspect(data.body, false, null))
+//	    console.log(util.inspect(data.body, false, null))
+	    res.send(data.body);
 	},function(err) {
 	    console.log('Something went wrong!', err);
+	    res.send(null);
 	});
     
-    res.redirect('/#');
+//    res.redirect('/#');
 
 });
 

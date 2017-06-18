@@ -191,8 +191,10 @@ angular.module('musicVizFunApp', [])
 	    {
 		selector: 'node',
 		style: {
-		    shape: 'hexagon',
+		    shape: 'circle',
 		    'background-color': 'red',
+		    'background-image': 'data(img_url)',
+		    'background-fit': 'cover',
 		    label: 'data(name)'
 		}
 	    }];
@@ -216,9 +218,12 @@ angular.module('musicVizFunApp', [])
 	    $log.log("l = ", l)
 	    for (var j = 0; j<l.length; j++) {
 		var artistID = l[j];
-		//$log.log("Adding artist with ID = " + artistID + " to graph", $scope.playlistArtistsByIDs);
+		$log.log("Adding artist with ID = " + artistID + " to graph", $scope.playlistArtistsByIDs);
 		$scope.cy.add({data: {id : $scope.playlistArtistsByIDs[artistID].id,
-				      name: $scope.playlistArtistsByIDs[artistID].name
+				      name: $scope.playlistArtistsByIDs[artistID].name,
+				      img_url: $scope.playlistArtistsByIDs[artistID].images[0].url,
+				      img_width: $scope.playlistArtistsByIDs[artistID].images[0].width,
+				      img_height: $scope.playlistArtistsByIDs[artistID].images[0].height
 				     }
 			      })
 	    }

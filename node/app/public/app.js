@@ -12,7 +12,7 @@ angular.module('musicVizFunApp', [])
 	
 	$scope.userIsLoggedIn = false;
 	$scope.loggedInUserName = '???';
-	$scope.urlOfLoggedInUserImage = 'https://hollywoodhatesme.files.wordpress.com/2012/07/invisible-man.jpg';
+	$scope.urlOfLoggedInUserImage = '/images/invisible-man.jpg';
 	
 	$scope.me = dataService.getMe()
 	    .then(function (data) {
@@ -111,11 +111,6 @@ angular.module('musicVizFunApp', [])
 			  }
 		      });
 
-	$scope.logPlaylists = function(i) {
-	    $log.log("playlist with index=" + i + " and ID=" + $scope.playlists[i].id + " changed status: checkboxModel = ",  $scope.checkboxModel);
-	    $log.log("playlistArtistsByIDs = ", $scope.playlistArtistsByIDs);
-	};
-
 	$scope.getPlaylistTracksByIndex = function(i) {
 	    return $scope.getPlaylistTracksByID(i, $scope.playlists[i].id,0,80);
 	}
@@ -187,11 +182,28 @@ angular.module('musicVizFunApp', [])
 	    }
 	];
 
+	$scope.updateAfterPlaylistStatusChange = function(playlistIndex) {
+	    $log.log("playlist with index=" + playlistIndex + " and ID=" + $scope.playlists[playlistIndex].id + " changed status: checkboxModel = ",  $scope.checkboxModel);
+	    if ($scope.checkboxModel[playlistIndex]) {
+		// Activate
+		$scope.addPlaylistArtistsToGraph(playlistIndex);
+	    }
+	    else {
+		// Remove
+		$log.log("Hiding elements from playlist with index = " + playlistIndex);
+		$scope.cy.filter(function(ele,i,eles){
+		    return ele.data('playlist_index') == playlistIndex;
+		}).remove();
+		$scope.cy.layout({name:'random'}).run();
+		$scope.cy.resize();
+	    }
+	};
+
 	$scope.graphStyle = [
 	    {
 		selector: 'node',
 		style: {
-		    shape: 'circle',
+//		    shape: 'hexagon',
 		    'background-color': 'red',
 		    'background-image': 'data(img_url)',
 		    'background-fit': 'cover',
@@ -219,19 +231,30 @@ angular.module('musicVizFunApp', [])
 	    for (var j = 0; j<l.length; j++) {
 		var artistID = l[j];
 		$log.log("Adding artist with ID = " + artistID + " to graph", $scope.playlistArtistsByIDs);
-		$scope.cy.add({data: {id : $scope.playlistArtistsByIDs[artistID].id,
-				      name: $scope.playlistArtistsByIDs[artistID].name,
-				      img_url: $scope.playlistArtistsByIDs[artistID].images[0].url,
-				      img_width: $scope.playlistArtistsByIDs[artistID].images[0].width,
-				      img_height: $scope.playlistArtistsByIDs[artistID].images[0].height
-				     }
-			      })
+		if ($scope.playlistArtistsByIDs[artistID]
+		    && $scope.playlistArtistsByIDs[artistID].id
+		    &&$scope.playlistArtistsByIDs[artistID].name) {
+		    var data = {id: $scope.playlistArtistsByIDs[artistID].id,
+				playlist_index: playlistIndex,
+				name: $scope.playlistArtistsByIDs[artistID].name};
+		    if ($scope.playlistArtistsByIDs[artistID].images[0]) {
+			data['img_url'] = $scope.playlistArtistsByIDs[artistID].images[0].url;
+			data['img_width'] = $scope.playlistArtistsByIDs[artistID].images[0].width;
+			data['img_height'] = $scope.playlistArtistsByIDs[artistID].images[0].height;
+		    }
+		    else {
+			data['img_url'] = '/images/invisible-man.jpg';
+		    }
+		    // TO DO: CHECK IF THE NODE ALREADY EXISTS (FROM ANOTHER PLAYLIST) BEFORE CREATING IT
+		    $scope.cy.add({data: data})
+		}
+
 	    }
 	    $scope.cy.viewport({zoom: 1,
 				pan: {x:100, y:100}});
 	    $scope.cy.layout({name: 'random'}).run();
 	    $scope.cy.resize();
-	    $log.log("Done running $scope.addPlaylistArtistsToGraph")
+	    $log.log("Done running $scope.addPlaylistArtistsToGraph for playlist with index = " + playlistIndex);
 	}
 
 	$scope.$watch(function() {return $scope.firstPlaylistHasBeenFullyDownloaded},

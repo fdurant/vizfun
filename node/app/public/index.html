@@ -277,7 +277,7 @@
 			 ng-model="checkboxModel[$index]"
 			 id="{{p.id}}"
 			 ng-init="getPlaylistTracksByIndex($index);"
-			 ng-change="logPlaylists($index)">
+			 ng-change="updateAfterPlaylistStatusChange($index)">
 		  <img ng-src="{{p.images[0].url}}" width="40" height="40" class="img-rounded" alt="photo of {{p.name}}"></img>
 		  <p>{{p.name}}</p>
 	            </input>

@@ -67,6 +67,9 @@ angular.module('musicVizFunApp', [])
     }])
 
     .controller('PlaylistController', ['$scope', '$rootScope', '$http', '$log', '$timeout', 'dataService', function($scope, $rootScope, $http, $log, $timeout, dataService) {
+
+	// We will be watching this variable for synchronization purposes
+	$scope.firstPlaylistHasBeenFullyDownloaded = false;
 	
 	// List of strings
 	$scope.playlists = [];
@@ -81,7 +84,7 @@ angular.module('musicVizFunApp', [])
 
 	// Inspired by https://docs.angularjs.org/api/ng/input/input%5Bcheckbox%5D
 	$scope.checkboxModel = [];
-	
+
 	// Only start retrieving the playlists when the user has successfully logged in
 	$scope.$watch(function() {return $rootScope.userIsLoggedIn},
 		      function(newValue, oldValue) {
@@ -141,7 +144,7 @@ angular.module('musicVizFunApp', [])
 			}
 		    }
 
-		    $scope.getMultipleArtists(Array.from(batchOfArtistsIDs));
+		    $scope.getMultipleArtists(i,Array.from(batchOfArtistsIDs));
 		    
 		    $log.log("playlistArtistIDs[" + i + "] = ", $scope.playlistArtistIDs[i]);
 		    $log.log("playlistTracksByIDs = ", $scope.playlistTracksByIDs);
@@ -149,10 +152,11 @@ angular.module('musicVizFunApp', [])
 			// There's more => recursive call
 			$scope.getPlaylistTracksByID(i,id,offset+increment,increment);
 		    }
+		    
 		});
 	}
 
-	$scope.getMultipleArtists = function(listOfArtistIDs) {
+	$scope.getMultipleArtists = function(i,listOfArtistIDs) {
 	    var getMultipleArtists = dataService.getMultipleArtists(listOfArtistIDs)
 		.then(function (response) {
 		    if (response.data.artists) {
@@ -161,7 +165,10 @@ angular.module('musicVizFunApp', [])
 			    $scope.playlistArtistsByIDs[artistID] = response.data.artists[a];
 			}
 		    }
-		    $scope.cy.resize();
+		    if (i == 0) {
+			$scope.firstPlaylistHasBeenFullyDownloaded= true;
+		    }
+
 		});
 	};
 
@@ -186,18 +193,53 @@ angular.module('musicVizFunApp', [])
 		style: {
 		    shape: 'hexagon',
 		    'background-color': 'red',
-		    label: 'data(id)'
+		    label: 'data(name)'
 		}
 	    }];
 	
-	$scope.cy = cytoscape({
-	    container:document.getElementById('cy'),
-	    elements: $scope.graph,
-	    layout: {name: 'circle'},
-	    style: $scope.graphStyle
-	});
+	$scope.cy = null;
+
+	$scope.circularLayout = {name: 'circle'};
+
+	$scope.initializeGraph = function(playlistIndex) {
+	    $scope.cy = cytoscape({
+		container:document.getElementById('cy'),
+		elements: [],
+		layout: $scope.circularLayout,
+		style: $scope.graphStyle
+	    });
+	}
+
+	$scope.addPlaylistArtistsToGraph = function(playlistIndex) {
+	    $log.log("Start running $scope.addPlaylistArtistsToGraph")
+	    var l = Array.from($scope.playlistArtistIDs[playlistIndex]);
+	    $log.log("l = ", l)
+	    for (var j = 0; j<l.length; j++) {
+		var artistID = l[j];
+		//$log.log("Adding artist with ID = " + artistID + " to graph", $scope.playlistArtistsByIDs);
+		$scope.cy.add({data: {id : $scope.playlistArtistsByIDs[artistID].id,
+				      name: $scope.playlistArtistsByIDs[artistID].name
+				     }
+			      })
+	    }
+	    $scope.cy.viewport({zoom: 1,
+				pan: {x:100, y:100}});
+	    $scope.cy.layout({name: 'random'}).run();
+	    $scope.cy.resize();
+	    $log.log("Done running $scope.addPlaylistArtistsToGraph")
+	}
+
+	$scope.$watch(function() {return $scope.firstPlaylistHasBeenFullyDownloaded},
+		      function(newValue, oldValue) {
+			  $log.log('$scope.firstPlaylistHasBeenFullyDownloaded value was: ' + oldValue +' and now is: ' + newValue);
+			  if (newValue) {
+			      $scope.initializeGraph(0);
+			      $scope.addPlaylistArtistsToGraph(0);
+			  }
+		      });
 
 	$scope.refreshGraph = function() {
+	    $scope.cy.layout({name:'random'}).run();
 	    $scope.cy.resize();
 	    $log.log("refreshed graph")
 	};

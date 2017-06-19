@@ -82,6 +82,10 @@ angular.module('musicVizFunApp', [])
 	$scope.playlistTracksByIDs = {};
 	$scope.playlistArtistsByIDs = {};
 
+	// Keeps track of the currently selected artist
+	$scope.currentArtistID = null;
+	$scope.currentArtistName = null;
+	
 	// Inspired by https://docs.angularjs.org/api/ng/input/input%5Bcheckbox%5D
 	$scope.checkboxModel = [];
 
@@ -167,20 +171,6 @@ angular.module('musicVizFunApp', [])
 		});
 	};
 
-	$scope.graph = [
-	    // nodes
-	    { data: { id: 'a' } },
-	    { data: { id: 'b' } },
-	    { data: { id: 'c' } },
-	    // edges
-	    {
-		data: {
-		    id: 'ab',
-		    source: 'a',
-		    target: 'b'
-		}
-	    }
-	];
 
 	$scope.updateAfterPlaylistStatusChange = function(playlistIndex) {
 	    $log.log("playlist with index=" + playlistIndex + " and ID=" + $scope.playlists[playlistIndex].id + " changed status: checkboxModel = ",  $scope.checkboxModel);
@@ -190,10 +180,11 @@ angular.module('musicVizFunApp', [])
 	    }
 	    else {
 		// Remove
-		$log.log("Hiding elements from playlist with index = " + playlistIndex);
+		$log.log("Removing all elements from playlist with index = " + playlistIndex);
 		$scope.cy.filter(function(ele,i,eles){
 		    return ele.data('playlist_index') == playlistIndex;
 		}).remove();
+		$scope.currentArtistID = null;
 		$scope.cy.layout({name:'random'}).run();
 		$scope.cy.resize();
 	    }
@@ -213,13 +204,11 @@ angular.module('musicVizFunApp', [])
 	
 	$scope.cy = null;
 
-	$scope.circularLayout = {name: 'circle'};
-
 	$scope.initializeGraph = function(playlistIndex) {
 	    $scope.cy = cytoscape({
 		container:document.getElementById('cy'),
 		elements: [],
-		layout: $scope.circularLayout,
+		layout: {name: 'random'},
 		style: $scope.graphStyle
 	    });
 	}
@@ -258,9 +247,16 @@ angular.module('musicVizFunApp', [])
 			$log.log("Artist node with ID = " + $scope.playlistArtistsByIDs[artistID].id + " already exists");
 		    }
 		    else {
-			$scope.cy.add({data: data});
+			$scope.cy.add({data: data}).on('tap', function(evt) {
+			    var thisArtistID = this.data().id;
+			    // https://stackoverflow.com/questions/38673700/putting-scope-in-cytoscape-click-event
+			    // updating an Angular model from outside Angular requires a manual trigger
+			    $scope.$apply(function(){
+				$scope.currentArtistID = thisArtistID;
+			    });
+			    $log.log('Tapped ', this.data().name, this.data().id);
+			});
 		    }
-		    
 		}
 
 	    }
@@ -281,11 +277,11 @@ angular.module('musicVizFunApp', [])
 		      });
 
 	$scope.refreshGraph = function() {
-	    $scope.cy.layout({name:'random'}).run();
+	    $scope.cy.layout({name: 'random'}).run();
 	    $scope.cy.resize();
 	    $log.log("refreshed graph")
 	};
-	
+
     }])
 
     .service('dataService', function($http) {

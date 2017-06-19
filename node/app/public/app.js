@@ -246,7 +246,21 @@ angular.module('musicVizFunApp', [])
 			data['img_url'] = '/images/invisible-man.jpg';
 		    }
 		    // TO DO: CHECK IF THE NODE ALREADY EXISTS (FROM ANOTHER PLAYLIST) BEFORE CREATING IT
-		    $scope.cy.add({data: data})
+		    var existing = $scope.cy.filter(function(ele,i) {
+			if (ele.isNode() && ele.data("id") == $scope.playlistArtistsByIDs[artistID].id) {
+			    return true;
+			}
+			return false;
+		    });
+		    if (existing.length > 0)
+		    {
+			// Node already exists (from another playlist)
+			$log.log("Artist node with ID = " + $scope.playlistArtistsByIDs[artistID].id + " already exists");
+		    }
+		    else {
+			$scope.cy.add({data: data});
+		    }
+		    
 		}
 
 	    }

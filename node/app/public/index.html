@@ -292,7 +292,7 @@
 
 	  <!-- Inspired by https://jsfiddle.net/6voan7k9/ -->
 	  <div id="cy"></div>
-	  <button class="btn btn-default" style="top:10px;" id="refresh-graph" ng-click="refreshGraph()">Refresh</button>
+	  <button class="btn btn-default" style="top-margin:10px;" id="refresh-graph" ng-click="refreshGraph()">Refresh</button>
 	  
 	</div>
 	
@@ -306,6 +306,18 @@
 	       width="100%"
 	       class="img-rounded"
 	       alt="photo of {{playlistArtistsByIDs[currentArtistID].name}}"></img>
+
+	  <div class="table-responsive"
+	       style="top-margin:10px;"
+	       ng-show="playlistArtistsByIDs[currentArtistID].images[0] != undefined">
+	    <table class="table table-hover">
+	      <tr ng-repeat="trackID in currentArtistTrackIDs">
+		<td><span class="glyphicon glyphicon-play-circle" aria-hidden="true"></td>
+		<td>{{playlistTracksByIDs[trackID].track.name}}</td>
+	      </tr>
+	    </table>
+	  </div>
+	  
 	</div>
 	  
       </div><!-- row row-header -->

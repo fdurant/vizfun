@@ -84,7 +84,7 @@ angular.module('musicVizFunApp', [])
 
 	// Keeps track of the currently selected artist
 	$scope.currentArtistID = null;
-	$scope.currentArtistName = null;
+	$scope.currentArtistTrackIDs = [];
 	
 	// Inspired by https://docs.angularjs.org/api/ng/input/input%5Bcheckbox%5D
 	$scope.checkboxModel = [];
@@ -116,7 +116,10 @@ angular.module('musicVizFunApp', [])
 		      });
 
 	$scope.getPlaylistTracksByIndex = function(i) {
-	    return $scope.getPlaylistTracksByID(i, $scope.playlists[i].id,0,80);
+	    // Keeping this number very moderate, so that we can get all artists for these tracks in one single batch
+	    // (see variable batchOfArtistsIDs further below)
+	    var nrTracksPerDownload = 50
+	    return $scope.getPlaylistTracksByID(i, $scope.playlists[i].id,0,nrTracksPerDownload);
 	}
 
 	$scope.getPlaylistTracksByID = function(i,id,offset,increment) {
@@ -132,6 +135,7 @@ angular.module('musicVizFunApp', [])
 		    var batchOfArtistsIDs = new Set();
 		    for (var j=0; j<response.data.items.length; j++) {
 			// Store each track for direct search by its ID
+			$log.log("Adding '" + response.data.items[j].track.name + "' to playlistTracksByIDs")
 			$scope.playlistTracksByIDs[response.data.items[j].track.id] = response.data.items[j];
 			// There can be more than one artist per track
 			if (response.data.items[j].track && response.data.items[j].track.artists) {
@@ -161,6 +165,7 @@ angular.module('musicVizFunApp', [])
 		    if (response.data.artists) {
 			for (var a=0; a<response.data.artists.length; a++) {
 			    var artistID = response.data.artists[a].id;
+//			    $log.log("Adding artist with artistID = " + artistID + " (" + response.data.artists[a].name + ") to playlistArtistsByIDs")
 			    $scope.playlistArtistsByIDs[artistID] = response.data.artists[a];
 			}
 		    }
@@ -177,6 +182,7 @@ angular.module('musicVizFunApp', [])
 	    if ($scope.checkboxModel[playlistIndex]) {
 		// Activate
 		$scope.addPlaylistArtistsToGraph(playlistIndex);
+		$scope.addPlaylistTracksToGraph(playlistIndex);
 	    }
 	    else {
 		// Remove
@@ -185,6 +191,7 @@ angular.module('musicVizFunApp', [])
 		    return ele.data('playlist_index') == playlistIndex;
 		}).remove();
 		$scope.currentArtistID = null;
+		$scope.currentArtistTrackIDs = [];
 		$scope.cy.layout({name:'random'}).run();
 		$scope.cy.resize();
 	    }
@@ -219,12 +226,13 @@ angular.module('musicVizFunApp', [])
 	    $log.log("l = ", l)
 	    for (var j = 0; j<l.length; j++) {
 		var artistID = l[j];
-		$log.log("Adding artist with ID = " + artistID + " to graph", $scope.playlistArtistsByIDs);
+//		$log.log("Adding artist with ID = " + artistID + " to graph", $scope.playlistArtistsByIDs);
 		if ($scope.playlistArtistsByIDs[artistID]
 		    && $scope.playlistArtistsByIDs[artistID].id
 		    &&$scope.playlistArtistsByIDs[artistID].name) {
 		    var data = {id: $scope.playlistArtistsByIDs[artistID].id,
 				playlist_index: playlistIndex,
+				trackIDs: [], // To be filled in later
 				name: $scope.playlistArtistsByIDs[artistID].name};
 		    if ($scope.playlistArtistsByIDs[artistID].images[0]) {
 			data['img_url'] = $scope.playlistArtistsByIDs[artistID].images[0].url;
@@ -241,20 +249,21 @@ angular.module('musicVizFunApp', [])
 			}
 			return false;
 		    });
-		    if (existing.length > 0)
-		    {
+		    if (existing.length > 0) {
 			// Node already exists (from another playlist)
 			$log.log("Artist node with ID = " + $scope.playlistArtistsByIDs[artistID].id + " already exists");
 		    }
 		    else {
 			$scope.cy.add({data: data}).on('tap', function(evt) {
 			    var thisArtistID = this.data().id;
+			    var thisArtistTrackIDs = this.data().trackIDs;
 			    // https://stackoverflow.com/questions/38673700/putting-scope-in-cytoscape-click-event
 			    // updating an Angular model from outside Angular requires a manual trigger
 			    $scope.$apply(function(){
 				$scope.currentArtistID = thisArtistID;
+				$scope.currentArtistTrackIDs = thisArtistTrackIDs;
 			    });
-			    $log.log('Tapped ', this.data().name, this.data().id);
+			    $log.log('Tapped ', this.data().name, this.data().id, this.data().trackIDs);
 			});
 		    }
 		}
@@ -273,10 +282,41 @@ angular.module('musicVizFunApp', [])
 			  if (newValue) {
 			      $scope.initializeGraph(0);
 			      $scope.addPlaylistArtistsToGraph(0);
+			      $scope.addPlaylistTracksToGraph(0);
 			  }
 		      });
 
-	$scope.refreshGraph = function() {
+	$scope.addPlaylistTracksToGraph = function(playlistIndex) {
+	    $log.log("Start running $scope.addPlaylistTracksToGraph")
+	    var l = Array.from($scope.playlistTracks[playlistIndex]);
+	    $log.log("l = ", l)
+	    for (var t = 0; t<l.length; t++) {
+		var track = l[t].track;
+		if (track.artists && track.id) {
+		    for (var a=0; a<track.artists.length; a++) {
+			var artistID = track.artists[a].id;
+//			$log.log("Adding trackID " + track.id + " to artistID " + artistID);
+			// Get the artist's existing node, and add the track ID to the data
+			var artistNode = $scope.cy.filter(function(ele,i) {
+			    if (ele.isNode() && ele.data("id") == artistID) {
+				return true;
+			    }
+			    return false;
+			});
+			if (artistNode.length > 0) {
+			    artistNode.data().trackIDs.push(track.id);
+			}
+			else {
+			    // Weird
+			    $log.log("Could not find artistID " + artistID + " for track '" + track.name + "'" )
+			}
+		    }
+		}
+	    }
+	    $log.log("Done running $scope.addPlaylistTracksToGraph")
+	}
+
+	    $scope.refreshGraph = function() {
 	    $scope.cy.layout({name: 'random'}).run();
 	    $scope.cy.resize();
 	    $log.log("refreshed graph")

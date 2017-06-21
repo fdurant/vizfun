@@ -85,6 +85,12 @@ angular.module('musicVizFunApp', [])
 	// Keeps track of the currently selected artist
 	$scope.currentArtistID = null;
 	$scope.currentArtistTrackIDs = [];
+
+	// Regulates the buttons next to the current artist's tracks
+	$scope.showPlayButtonForTrack = []; // List of booleans 
+	$scope.showPlayingButtonForTrack = []; // List of booleans 
+	$scope.showStopButtonForTrack = []; // List of booleans
+	$scope.trackIsPlaying = []; // List of booleans
 	
 	// Inspired by https://docs.angularjs.org/api/ng/input/input%5Bcheckbox%5D
 	$scope.checkboxModel = [];
@@ -135,7 +141,7 @@ angular.module('musicVizFunApp', [])
 		    var batchOfArtistsIDs = new Set();
 		    for (var j=0; j<response.data.items.length; j++) {
 			// Store each track for direct search by its ID
-			$log.log("Adding '" + response.data.items[j].track.name + "' to playlistTracksByIDs")
+//			$log.log("Adding '" + response.data.items[j].track.name + "' to playlistTracksByIDs")
 			$scope.playlistTracksByIDs[response.data.items[j].track.id] = response.data.items[j];
 			// There can be more than one artist per track
 			if (response.data.items[j].track && response.data.items[j].track.artists) {
@@ -316,11 +322,56 @@ angular.module('musicVizFunApp', [])
 	    $log.log("Done running $scope.addPlaylistTracksToGraph")
 	}
 
-	    $scope.refreshGraph = function() {
+	$scope.refreshGraph = function() {
 	    $scope.cy.layout({name: 'random'}).run();
 	    $scope.cy.resize();
 	    $log.log("refreshed graph")
 	};
+
+	$scope.initializeTrackButtons = function(trackIndex) {
+	    $scope.showPlayButtonForTrack[trackIndex] = false; // List of booleans 
+	    $scope.showPlayingButtonForTrack[trackIndex] = false; // List of booleans 
+	    $scope.showStopButtonForTrack = false; // List of booleans
+	    $scope.trackIsPlaying = false; // List of booleans
+	}
+
+	$scope.updateTrackButtons = function(trackIndex, entering) {
+	    if (entering) {
+		if ($scope.trackIsPlaying[trackIndex]) {
+		    $scope.showPlayButtonForTrack[trackIndex] = false;
+		    $scope.showPlayingButtonForTrack[trackIndex] = false;
+		    $scope.showStopButtonForTrack = true;	    
+		}
+		else {
+		    $scope.showPlayButtonForTrack[trackIndex] = true;
+		    $scope.showPlayingButtonForTrack[trackIndex] = false;
+		    $scope.showStopButtonForTrack = false;
+		}
+	    }
+	    else {
+		// Leaving
+		if ($scope.trackIsPlaying[trackIndex]) {
+		    $scope.showPlayButtonForTrack[trackIndex] = false;
+		    $scope.showPlayingButtonForTrack[trackIndex] = true;
+		    $scope.showStopButtonForTrack = false;
+		}
+		else {
+		    $scope.showPlayButtonForTrack[trackIndex] = false;
+		    $scope.showPlayingButtonForTrack[trackIndex] = false;
+		    $scope.showStopButtonForTrack = false;
+		}
+	    }
+	}
+	    
+	$scope.playPreview = function(trackIndex) {
+	    $log.log("Start playing preview '" + currentArtistTrackIDs[trackIndex] + "'");
+	    $scope.trackIsPlaying[trackIndex] = true;
+	}
+
+	$scope.stopPreview = function(trackIndex) {
+	    $log.log("Stop playing preview '" + currentArtistTrackIDs[trackIndex] + "'");
+	    $scope.trackIsPlaying[trackIndex] = false;
+	}
 
     }])
 

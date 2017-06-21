@@ -84,7 +84,7 @@ body {
     width: 139px;
 }
 
-.navbar-fixed-left + .container {
+.navbar-fixed-left + .container-fluid {
     padding-left: 160px;
 }
 
@@ -101,4 +101,9 @@ body {
     top: 30px;
     bottom: 10px;
     left: 0px;
+}
+
+#artist-details {
+    background-color: #FFFFFF;
+    color: #000000;
 }

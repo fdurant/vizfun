@@ -311,12 +311,16 @@
 	  <div class="table-responsive"
 	       style="top-margin:10px;"
 	       ng-show="playlistArtistsByIDs[currentArtistID].images[0] != undefined">
-	    <table class="table table-hover" ng-show="currentArtistTrackIDs.length &gt; 0">
+	    <table class="table table-hover"
+		   ng-show="currentArtistTrackIDs.length &gt; 0">
+
 	      <tr ng-repeat="trackID in currentArtistTrackIDs track by $index"
 		  ng-mouseover="updateTrackButtons($index,true);"
 		  ng-mouseleave="updateTrackButtons($index,false);">
+		
 		<td id="{{'track-button-' + $index}}"
-		    ng-init="initializeTrackButtons($index);">
+		    ng-init="initializeTrackButtons($index);"
+		    ng-click="playOrStop($index)">
 		  <!-- Default button shown just after initialization -->
 		  <span ng-show="!(showPlayButtonForTrack[$index] || showPlayingButtonForTrack[$index] || showStopButtonForTrack[$index])"
 			class="glyphicon glyphicon-music"
@@ -332,13 +336,17 @@
 			class="glyphicon glyphicon-stop"
 			aria-hidden="true"></span>
 		</td>
+
 		<td id="{{'track-name-' + $index}}"
 		  ng-mouseover="updateTrackButtons($index,true);"
 		  ng-mouseleave="updateTrackButtons($index,false);">
 		  {{playlistTracksByIDs[trackID].track.name}}
 		</td>
+
 	      </tr>
+
 	    </table>
+
 	  </div>
 	  
 	</div>

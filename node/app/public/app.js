@@ -266,6 +266,10 @@ angular.module('musicVizFunApp', [])
 			    // https://stackoverflow.com/questions/38673700/putting-scope-in-cytoscape-click-event
 			    // updating an Angular model from outside Angular requires a manual trigger
 			    $scope.$apply(function(){
+				// Stop anything that's still playing from the previous artist
+				for (var t=0; t<$scope.trackIsPlaying.length; t++) {
+				    $scope.stopPreview(t,false);
+				}
 				$scope.currentArtistID = thisArtistID;
 				$scope.currentArtistTrackIDs = thisArtistTrackIDs;
 			    });
@@ -314,7 +318,7 @@ angular.module('musicVizFunApp', [])
 			}
 			else {
 			    // Weird
-			    $log.log("Could not find artistID " + artistID + " for track '" + track.name + "'" )
+			    $log.log("Could not find artistID " + artistID + " for track '" +track.name + "'" )
 			}
 		    }
 		}
@@ -331,8 +335,8 @@ angular.module('musicVizFunApp', [])
 	$scope.initializeTrackButtons = function(trackIndex) {
 	    $scope.showPlayButtonForTrack[trackIndex] = false; // List of booleans 
 	    $scope.showPlayingButtonForTrack[trackIndex] = false; // List of booleans 
-	    $scope.showStopButtonForTrack = false; // List of booleans
-	    $scope.trackIsPlaying = false; // List of booleans
+	    $scope.showStopButtonForTrack[trackIndex] = false; // List of booleans
+	    $scope.trackIsPlaying[trackIndex] = false; // List of booleans
 	}
 
 	$scope.updateTrackButtons = function(trackIndex, entering) {
@@ -340,12 +344,12 @@ angular.module('musicVizFunApp', [])
 		if ($scope.trackIsPlaying[trackIndex]) {
 		    $scope.showPlayButtonForTrack[trackIndex] = false;
 		    $scope.showPlayingButtonForTrack[trackIndex] = false;
-		    $scope.showStopButtonForTrack = true;	    
+		    $scope.showStopButtonForTrack[trackIndex] = true;	    
 		}
 		else {
 		    $scope.showPlayButtonForTrack[trackIndex] = true;
 		    $scope.showPlayingButtonForTrack[trackIndex] = false;
-		    $scope.showStopButtonForTrack = false;
+		    $scope.showStopButtonForTrack[trackIndex] = false;
 		}
 	    }
 	    else {
@@ -353,26 +357,58 @@ angular.module('musicVizFunApp', [])
 		if ($scope.trackIsPlaying[trackIndex]) {
 		    $scope.showPlayButtonForTrack[trackIndex] = false;
 		    $scope.showPlayingButtonForTrack[trackIndex] = true;
-		    $scope.showStopButtonForTrack = false;
+		    $scope.showStopButtonForTrack[trackIndex] = false;
 		}
 		else {
 		    $scope.showPlayButtonForTrack[trackIndex] = false;
 		    $scope.showPlayingButtonForTrack[trackIndex] = false;
-		    $scope.showStopButtonForTrack = false;
+		    $scope.showStopButtonForTrack[trackIndex] = false;
 		}
 	    }
 	}
 	    
+	$scope.playOrStop = function(trackIndex) {
+	    if ($scope.trackIsPlaying[trackIndex] && $scope.showStopButtonForTrack[trackIndex]) {
+		$scope.stopPreview(trackIndex, true);
+	    }
+	    else if (!$scope.trackIsPlaying[trackIndex] && $scope.showPlayButtonForTrack[trackIndex]) {
+		$scope.playPreview(trackIndex);
+	    }
+	}
+
 	$scope.playPreview = function(trackIndex) {
-	    $log.log("Start playing preview '" + currentArtistTrackIDs[trackIndex] + "'");
+	    // There can be only one preview playing at any time
+	    for (var t=0; t<$scope.trackIsPlaying.length; t++) {
+		if ($scope.trackIsPlaying[t]) {
+		    $scope.stopPreview(t,t==trackIndex);
+		}
+	    }
+
+	    $log.log("Start playing preview '" + $scope.playlistTracksByIDs[$scope.currentArtistTrackIDs[trackIndex]].track.name + "'");
+	    // Insert code for actually starting audio play here
+	    //
+	    //
 	    $scope.trackIsPlaying[trackIndex] = true;
+	    $scope.showPlayButtonForTrack[trackIndex] = false;
+	    $scope.showPlayingButtonForTrack[trackIndex] = true;
+	    $scope.showStopButtonForTrack[trackIndex] = false;
 	}
 
-	$scope.stopPreview = function(trackIndex) {
-	    $log.log("Stop playing preview '" + currentArtistTrackIDs[trackIndex] + "'");
-	    $scope.trackIsPlaying[trackIndex] = false;
+	$scope.stopPreview = function(trackIndex, inFocus) {
+	    if ($scope.trackIsPlaying[trackIndex]) {
+		$log.log("Stop playing preview '" + $scope.playlistTracksByIDs[$scope.currentArtistTrackIDs[trackIndex]].track.name + "'");
+		// Insert code for actually stopping audio play here
+		//
+		//
+		$scope.trackIsPlaying[trackIndex] = false;
+		if (!inFocus) {
+		    $scope.showPlayButtonForTrack[trackIndex] = false;
+		}
+		$scope.showPlayingButtonForTrack[trackIndex] = false;
+		$scope.showStopButtonForTrack[trackIndex] = false;
+	    }
 	}
-
+	
     }])
 
     .service('dataService', function($http) {

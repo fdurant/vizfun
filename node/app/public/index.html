@@ -319,7 +319,7 @@
 		  ng-mouseleave="updateTrackButtons($index,false);">
 		
 		<td id="{{'track-button-' + $index}}"
-		    ng-init="initializeAudio($index); initializeTrackButtons($index);"
+		    ng-init="initializeTrackButtons($index);"
 		    ng-click="playOrStop($index)">
 		  <!-- Default button shown just after initialization -->
 		  <span ng-show="!(showPlayButtonForTrack[$index] || showPlayingButtonForTrack[$index] || showStopButtonForTrack[$index])"

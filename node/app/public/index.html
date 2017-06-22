@@ -319,7 +319,7 @@
 		  ng-mouseleave="updateTrackButtons($index,false);">
 		
 		<td id="{{'track-button-' + $index}}"
-		    ng-init="initializeTrackButtons($index);"
+		    ng-init="initializeAudio($index); initializeTrackButtons($index);"
 		    ng-click="playOrStop($index)">
 		  <!-- Default button shown just after initialization -->
 		  <span ng-show="!(showPlayButtonForTrack[$index] || showPlayingButtonForTrack[$index] || showStopButtonForTrack[$index])"
@@ -388,6 +388,9 @@
     <script src="../bower_components/cytoscape/dist/cytoscape.min.js"></script>
     <script src="../bower_components/cytoscape-spread/cytoscape-spread.js"></script>
     <script src="../bower_components/cytoscape-cola/cytoscape-cola.js"></script>
+
+    <!-- audio library -->
+    <script src="../bower_components/howler/dist/howler.min.js"></script>
 
 </body>
   

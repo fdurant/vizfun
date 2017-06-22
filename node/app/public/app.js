@@ -91,6 +91,9 @@ angular.module('musicVizFunApp', [])
 	$scope.showPlayingButtonForTrack = []; // List of booleans 
 	$scope.showStopButtonForTrack = []; // List of booleans
 	$scope.trackIsPlaying = []; // List of booleans
+
+	// audio
+	$scope.audioPlayers = []; // One player per current artist's track
 	
 	// Inspired by https://docs.angularjs.org/api/ng/input/input%5Bcheckbox%5D
 	$scope.checkboxModel = [];
@@ -196,6 +199,13 @@ angular.module('musicVizFunApp', [])
 		$scope.cy.filter(function(ele,i,eles){
 		    return ele.data('playlist_index') == playlistIndex;
 		}).remove();
+
+		// Stop current preview, if any
+		for (var t=0; t<$scope.trackIsPlaying.length; t++) {
+		    $scope.stopPreview(t,false);
+		}
+		$scope.audioPlayers = [];
+
 		$scope.currentArtistID = null;
 		$scope.currentArtistTrackIDs = [];
 		$scope.cy.layout({name:'random'}).run();
@@ -270,8 +280,17 @@ angular.module('musicVizFunApp', [])
 				for (var t=0; t<$scope.trackIsPlaying.length; t++) {
 				    $scope.stopPreview(t,false);
 				}
+				$scope.audioPlayers = [];
+				
+				// And set up the new artist
 				$scope.currentArtistID = thisArtistID;
 				$scope.currentArtistTrackIDs = thisArtistTrackIDs;
+
+				// Re-initialize the audio player(s)
+				for (var t = 0; t<$scope.currentArtistTrackIDs.length; t++) {
+				    $scope.initializeAudio(t);
+				}
+
 			    });
 			    $log.log('Tapped ', this.data().name, this.data().id, this.data().trackIDs);
 			});
@@ -332,6 +351,17 @@ angular.module('musicVizFunApp', [])
 	    $log.log("refreshed graph")
 	};
 
+	$scope.initializeAudio = function(trackIndex) {
+	    var trackID = $scope.currentArtistTrackIDs[trackIndex];
+	    var trackUrl = $scope.playlistTracksByIDs[trackID].track.preview_url;
+	    $scope.audioPlayers[trackIndex] = new Howl({
+		    src: [trackUrl],
+		    html5: true,
+		    volume: 1.0
+		});
+	    $log.log("Initialized audio for '" + $scope.playlistTracksByIDs[trackID].track.name + "' (trackID " + trackID);
+	}
+
 	$scope.initializeTrackButtons = function(trackIndex) {
 	    $scope.showPlayButtonForTrack[trackIndex] = false; // List of booleans 
 	    $scope.showPlayingButtonForTrack[trackIndex] = false; // List of booleans 
@@ -374,6 +404,9 @@ angular.module('musicVizFunApp', [])
 	    else if (!$scope.trackIsPlaying[trackIndex] && $scope.showPlayButtonForTrack[trackIndex]) {
 		$scope.playPreview(trackIndex);
 	    }
+	    else {
+		$log.log("This click was not very useful")
+	    }
 	}
 
 	$scope.playPreview = function(trackIndex) {
@@ -384,10 +417,10 @@ angular.module('musicVizFunApp', [])
 		}
 	    }
 
-	    $log.log("Start playing preview '" + $scope.playlistTracksByIDs[$scope.currentArtistTrackIDs[trackIndex]].track.name + "'");
-	    // Insert code for actually starting audio play here
-	    //
-	    //
+	    $log.log("Start playing preview '" + $scope.playlistTracksByIDs[$scope.currentArtistTrackIDs[trackIndex]].track.name + "' (= track index " + trackIndex + ")");
+	    $scope.audioPlayerCurrentTrackID = $scope.audioPlayers[trackIndex].play();
+	    $log.log("$scopee.audioPlayerCurrentTrackID = ", $scope.audioPlayerCurrentTrackID)
+	    
 	    $scope.trackIsPlaying[trackIndex] = true;
 	    $scope.showPlayButtonForTrack[trackIndex] = false;
 	    $scope.showPlayingButtonForTrack[trackIndex] = true;
@@ -396,10 +429,10 @@ angular.module('musicVizFunApp', [])
 
 	$scope.stopPreview = function(trackIndex, inFocus) {
 	    if ($scope.trackIsPlaying[trackIndex]) {
-		$log.log("Stop playing preview '" + $scope.playlistTracksByIDs[$scope.currentArtistTrackIDs[trackIndex]].track.name + "'");
-		// Insert code for actually stopping audio play here
-		//
-		//
+		$log.log("Stop playing preview '" + $scope.playlistTracksByIDs[$scope.currentArtistTrackIDs[trackIndex]].track.name + "' (= track index " + trackIndex + ")");
+
+		$scope.audioPlayers[trackIndex].stop();
+
 		$scope.trackIsPlaying[trackIndex] = false;
 		if (!inFocus) {
 		    $scope.showPlayButtonForTrack[trackIndex] = false;

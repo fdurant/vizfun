@@ -90,6 +90,7 @@ angular.module('musicVizFunApp', [])
 	$scope.showPlayButtonForTrack = []; // List of booleans 
 	$scope.showPlayingButtonForTrack = []; // List of booleans 
 	$scope.showStopButtonForTrack = []; // List of booleans
+	$scope.showMusicButtonForTrack = []; // List of booleans
 
 	// audio
 	$scope.audioPlayer = null;
@@ -373,6 +374,7 @@ angular.module('musicVizFunApp', [])
 	    $scope.showPlayButtonForTrack[trackIndex] = false; // List of booleans 
 	    $scope.showPlayingButtonForTrack[trackIndex] = trackIndex == 0 ? true : false; // List of booleans 
 	    $scope.showStopButtonForTrack[trackIndex] = false; // List of booleans
+	    $scope.updateMusicButtonForTrack(trackIndex)
 	}
 
 	$scope.updateTrackButtons = function(trackIndex, entering) {
@@ -401,6 +403,14 @@ angular.module('musicVizFunApp', [])
 		    $scope.showStopButtonForTrack[trackIndex] = false;
 		}
 	    }
+	    $scope.updateMusicButtonForTrack(trackIndex)
+	}
+
+	$scope.updateMusicButtonForTrack = function(trackIndex) {
+	    $log.log("Running updateMusicButtonForTrack(" + trackIndex + ")")
+	    $scope.showMusicButtonForTrack[trackIndex] = !($scope.showPlayButtonForTrack[trackIndex] ||
+							   $scope.showPlayingButtonForTrack[trackIndex] ||
+							   $scope.showStopButtonForTrack[trackIndex]);
 	}
 	    
 	$scope.playOrStop = function(trackIndex) {
@@ -435,6 +445,7 @@ angular.module('musicVizFunApp', [])
 	    $scope.showPlayButtonForTrack[trackIndex] = false;
 	    $scope.showPlayingButtonForTrack[trackIndex] = true;
 	    $scope.showStopButtonForTrack[trackIndex] = false;
+	    $scope.updateMusicButtonForTrack(trackIndex)
 	}
 
 	$scope.stopPreview = function(trackIndex, inFocus) {
@@ -452,10 +463,14 @@ angular.module('musicVizFunApp', [])
 		$scope.showPlayingButtonForTrack[trackIndex] = false;
 		$scope.showStopButtonForTrack[trackIndex] = false;
 	    }
+
+	    // Using timeout to force a reevaluation pf ng-show condition, even when nothing was clicked
+	    $timeout($scope.updateMusicButtonForTrack(trackIndex));
 	    
-	    $log.log("$scope.showPlayButtonForTrack[trackIndex] = ", $scope.showPlayButtonForTrack[trackIndex])
-	    $log.log("$scope.showPlayingButtonForTrack[trackIndex] = ", $scope.showPlayingButtonForTrack[trackIndex])
-	    $log.log("$scope.showStopButtonForTrack[trackIndex] = ", $scope.showStopButtonForTrack[trackIndex])
+	    $log.log("$scope.showPlayButtonForTrack["+trackIndex+"] = ", $scope.showPlayButtonForTrack[trackIndex])
+	    $log.log("$scope.showPlayingButtonForTrack["+trackIndex+"] = ", $scope.showPlayingButtonForTrack[trackIndex])
+	    $log.log("$scope.showStopButtonForTrack["+trackIndex+"] = ", $scope.showStopButtonForTrack[trackIndex])
+	    $log.log("$scope.showMusicButtonForTrack["+trackIndex+"] = ", $scope.showMusicButtonForTrack[trackIndex])
 	}
 	
     }])

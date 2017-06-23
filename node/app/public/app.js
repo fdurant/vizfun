@@ -256,6 +256,14 @@ angular.module('musicVizFunApp', [])
 		    else {
 			data['img_url'] = '/images/invisible-man.jpg';
 		    }
+		    if ($scope.playlistArtistsByIDs[artistID].genres) {
+			$log.log('genres for ' + $scope.playlistArtistsByIDs[artistID].name + ' = ', $scope.playlistArtistsByIDs[artistID].genres);
+			var genres = $scope.playlistArtistsByIDs[artistID].genres || [];
+			data['genres'] = new Set(genres);
+		    }
+		    else {
+			
+		    }
 		    // TO DO: CHECK IF THE NODE ALREADY EXISTS (FROM ANOTHER PLAYLIST) BEFORE CREATING IT
 		    var existing = $scope.cy.filter(function(ele,i) {
 			if (ele.isNode() && ele.data("id") == $scope.playlistArtistsByIDs[artistID].id) {
@@ -355,13 +363,66 @@ angular.module('musicVizFunApp', [])
 	    $log.log("refreshed graph")
 	};
 
+	$scope.linkArtists = function(simThreshold) {
+	    simThreshold = simThreshold || 0.50;
+	    var allArtists = $scope.cy.nodes();
+	    $scope.cy.batch(function() {
+		var nrArtists = allArtists.length;
+		for (var i=0; i<nrArtists; i++) {
+		    for (var j=i+1; j<nrArtists; j++) {
+			var a1 = allArtists[i];
+			var a2 = allArtists[j];
+			var simScore = $scope.calculateSimilarity(a1, a2);
+			if (simScore > simThreshold) {
+			    var edge = { id : a1.data().id + '_' + a2.data().id,
+					 source : a1.data().id,
+					 target: a2.data().id,
+					 simScore: simScore};
+			    $scope.cy.add({data: edge});
+			}
+		    }
+		}
+	    })
+	    $log.log("linked graph");
+	}
+
+	$scope.calculateSimilarity = function(artistNode1, artistNode2) {
+	    var setOfGenres1 = artistNode1.data().genres;
+	    var setOfGenres2 = artistNode2.data().genres;
+	    var intersection = new Set();
+	    for (let elem of setOfGenres1) {
+		if (setOfGenres2.has(elem)) {
+		    intersection.add(elem);
+		}
+	    }
+	    if (intersection.size == 0) {
+		return 0;
+	    }
+	    var union = new Set(setOfGenres1);
+	    for (let elem of setOfGenres2) {
+		union.add(elem);
+	    }
+	    if (setOfGenres1.size > 0 && setOfGenres1.size > 0) {
+		// Jaccard similarity
+		var simScore = intersection.size / union.size;
+		
+//		$log.log("Similarity between '" + artistNode1.data().name + "' and '" + artistNode2.data().name + "' = " + simScore);
+//		$log.log('Intersection: ', Array.from(intersection));
+//		$log.log('Union: ', Array.from(union));
+		return simScore;
+	    }
+	    else {
+		return 0;
+	    }
+	}
+
 	$scope.initializeAudio = function(trackIndex) {
 	    var trackID = $scope.currentArtistTrackIDs[trackIndex];
 	    var trackUrl = $scope.playlistTracksByIDs[trackID].track.preview_url;
 	    $scope.audioPlayer = new Howl({
 		src: [trackUrl],
 		html5: true,
-		volume: 1.0,
+		volume: 0.5,
 	    }).on('end', function(audioId) {
 		$log.log("Running audioEndHandler()");
 		$scope.stopPreview(trackIndex, false);

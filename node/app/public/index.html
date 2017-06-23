@@ -292,7 +292,8 @@
 
 	  <!-- Inspired by https://jsfiddle.net/6voan7k9/ -->
 	  <div id="cy"></div>
-	  <button class="btn btn-default" style="top-margin:10px;" id="refresh-graph" ng-click="refreshGraph()">Refresh</button>
+	  <button class="btn btn-default" style="top-margin:10px;" id="refresh-graph" ng-click="refreshGraph()">Refresh graph</button>
+	  <button class="btn btn-default" style="top-margin:10px;" id="link-graph" ng-click="linkArtists()">Link artists</button>
 	  
 	</div>
 	
@@ -392,6 +393,9 @@
     <!-- audio library -->
     <script src="../bower_components/howler/dist/howler.min.js"></script>
 
+    <!-- Needed for creation, sorting and selection of similarity links -->
+    <script src="../bower_components/js-priority-queue/priority-queue.min.js"></script>    
+    
 </body>
   
 </html>

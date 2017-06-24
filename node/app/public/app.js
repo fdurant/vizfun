@@ -363,25 +363,55 @@ angular.module('musicVizFunApp', [])
 	    $log.log("refreshed graph")
 	};
 
-	$scope.linkArtists = function(simThreshold) {
+	$scope.linkArtists = function(simThreshold, strongestN) {
 	    simThreshold = simThreshold || 0.50;
+	    strongestN = strongestN || 2;
 	    var allArtists = $scope.cy.nodes();
+	    var nrArtists = allArtists.length;
+	    // Symmetric similarity matrix
+	    // Diagonals set to zero, because we're not interested in self-similarity
+	    var similarityMatrix = math.zeros(allArtists.length, allArtists.length);
 	    $scope.cy.batch(function() {
-		var nrArtists = allArtists.length;
 		for (var i=0; i<nrArtists; i++) {
 		    for (var j=i+1; j<nrArtists; j++) {
 			var a1 = allArtists[i];
 			var a2 = allArtists[j];
 			var simScore = $scope.calculateSimilarity(a1, a2);
+			// Matrix is symmetric
+			similarityMatrix.subset(math.index(i,j), simScore);
+			similarityMatrix.subset(math.index(j,i), simScore);
+		    }
+		}
+		$log.log("similarityMatrix = ", similarityMatrix)
+		// Loop over the rows, and make a new edge
+		// for the top-N links
+		// if and only if the link is stronger than the threshold
+		for (var i=0; i<nrArtists; i++) {
+		    var row = similarityMatrix.subset(math.index(i,math.range(0,nrArtists))).valueOf()[0];
+		    $log.log("row = ", row);
+		    var indices = new Array(nrArtists);
+		    for (var k = 0; k < nrArtists; ++k) indices[k] = k;
+		    $log.log("unsorted indices = ", indices);
+		    indices.sort(function (a, b) { return row[a] > row[b] ? -1 : row[a] < row[b] ? 1 : 0; });
+		    $log.log("sorted indices = ", indices);
+		    // Create the edges
+		    for (var s=0; s<strongestN; s++) {
+			var j = indices[s];
+			var simScore = row[j];
 			if (simScore > simThreshold) {
+			    var a1 = allArtists[i];
+			    var a2 = allArtists[j];
 			    var edge = { id : a1.data().id + '_' + a2.data().id,
 					 source : a1.data().id,
 					 target: a2.data().id,
-					 simScore: simScore};
+					 simScore: simScore,
+					 label: simScore};
 			    $scope.cy.add({data: edge});
 			}
+			
 		    }
-		}
+		}		
+
 	    })
 	    $log.log("linked graph");
 	}

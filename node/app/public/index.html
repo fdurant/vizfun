@@ -9,6 +9,7 @@
     <link href="../bower_components/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet">
     <link href="../bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <link href="../bower_components/bootstrap-social/bootstrap-social.css" rel="stylesheet">
+    <link href="../bower_components/qtip2/jquery.qtip.css" rel="stylesheet">
     <link href="mystyles.css" rel="stylesheet">
     <script src="../bower_components/angular/angular.min.js"></script>
 
@@ -293,7 +294,8 @@
 	  <!-- Inspired by https://jsfiddle.net/6voan7k9/ -->
 	  <div id="cy"></div>
 	  <button class="btn btn-default" style="top-margin:10px;" id="refresh-graph" ng-click="refreshGraph()">Refresh graph</button>
-	  <button class="btn btn-default" style="top-margin:10px;" id="link-graph" ng-click="linkArtists(0.01,1)">Link artists</button>
+	  <button class="btn btn-default" style="top-margin:10px;" id="link-graph" ng-click="linkArtists(0.15,2)">Link artists</button>
+	  <button class="btn btn-default" style="top-margin:10px;" id="layout-graph" ng-click="layoutArtists()">Layout artists</button>
 	  
 	</div>
 	
@@ -388,6 +390,9 @@
     <!-- Cytoscape and two layout extensions -->
     <script src="../bower_components/cytoscape/dist/cytoscape.min.js"></script>
     <script src="../bower_components/cytoscape-spread/cytoscape-spread.js"></script>
+    <script src="../bower_components/cytoscape-cola/cola.js"></script>
+    <script src="../bower_components/cytoscape-qtip/cytoscape-qtip.js"></script>
+    <script src="../bower_components/qtip2/jquery.qtip.min.js"></script>
     <script src="../bower_components/cytoscape-cola/cytoscape-cola.js"></script>
 
     <!-- audio library -->

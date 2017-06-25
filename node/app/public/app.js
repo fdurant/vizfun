@@ -221,7 +221,17 @@ angular.module('musicVizFunApp', [])
 		    'background-fit': 'cover',
 		    label: 'data(name)'
 		}
-	    }];
+	    },
+	    {
+		selector: 'edge',
+		style: {
+		    'width': 0.5,
+		    'line-color': 'red',
+		    'mid-target-arrow-shape': 'circle',
+		    'mid-target-arrow-color': 'red'
+		}
+	    }
+	];
 	
 	$scope.cy = null;
 
@@ -371,42 +381,87 @@ angular.module('musicVizFunApp', [])
 	    // Symmetric similarity matrix
 	    // Diagonals set to zero, because we're not interested in self-similarity
 	    var similarityMatrix = math.zeros(allArtists.length, allArtists.length);
+	    var commonGenresMatrix = new Array(allArtists.length).fill(new Array(allArtists.length).fill([]));
 	    $scope.cy.batch(function() {
 		for (var i=0; i<nrArtists; i++) {
 		    for (var j=i+1; j<nrArtists; j++) {
 			var a1 = allArtists[i];
 			var a2 = allArtists[j];
-			var simScore = $scope.calculateSimilarity(a1, a2);
-			// Matrix is symmetric
-			similarityMatrix.subset(math.index(i,j), simScore);
-			similarityMatrix.subset(math.index(j,i), simScore);
+			var res = $scope.calculateSimilarity(a1, a2);
+			// Matrix is symmetric. No need to store value if smaller than threshold
+			if (res.simScore >= simThreshold) {
+			    similarityMatrix.subset(math.index(i,j), res.simScore);
+			    similarityMatrix.subset(math.index(j,i), res.simScore);
+			    commonGenresMatrix[i][j] = Array.from(res.intersection);
+			    commonGenresMatrix[j][i] = Array.from(res.intersection);
+			}
 		    }
 		}
-		$log.log("similarityMatrix = ", similarityMatrix)
+//		$log.log("similarityMatrix = ", similarityMatrix)
 		// Loop over the rows, and make a new edge
 		// for the top-N links
 		// if and only if the link is stronger than the threshold
 		for (var i=0; i<nrArtists; i++) {
 		    var row = similarityMatrix.subset(math.index(i,math.range(0,nrArtists))).valueOf()[0];
-		    $log.log("row = ", row);
+//		    $log.log("row = ", row);
 		    var indices = new Array(nrArtists);
 		    for (var k = 0; k < nrArtists; ++k) indices[k] = k;
-		    $log.log("unsorted indices = ", indices);
+//		    $log.log("unsorted indices = ", indices);
 		    indices.sort(function (a, b) { return row[a] > row[b] ? -1 : row[a] < row[b] ? 1 : 0; });
-		    $log.log("sorted indices = ", indices);
+//		    $log.log("sorted indices = ", indices);
 		    // Create the edges
 		    for (var s=0; s<strongestN; s++) {
 			var j = indices[s];
 			var simScore = row[j];
-			if (simScore > simThreshold) {
+			if (simScore >= simThreshold) {
 			    var a1 = allArtists[i];
 			    var a2 = allArtists[j];
-			    var edge = { id : a1.data().id + '_' + a2.data().id,
-					 source : a1.data().id,
-					 target: a2.data().id,
+			    // We want to prevent bidirectional (i.e. double) edges
+			    var sourceNode, targetNode, sourceId, targetId = null;
+			    if (a1.data().id <= a2.data().id) {
+				sourceNode = a1;
+				targetNode = a2
+			    }
+			    else {
+				sourceNode = a2;
+				targetNode = a1;
+			    }
+			    sourceId = sourceNode.data().id;
+			    targetId = targetNode.data().id;
+			    var edgeId = sourceId + '_' + targetId;
+			    if ($scope.cy.$("[id = '" + edgeId + "']").length > 0) {
+//				$log.log("No need to create edge " + edgeId + " twice!");
+				continue;
+			    }
+			    var edge = { id : edgeId,
+					 source : sourceId,
+					 target: targetId,
 					 simScore: simScore,
-					 label: simScore};
-			    $scope.cy.add({data: edge});
+					 common_genres: commonGenresMatrix[i][j]};
+//			    $log.log('commonGenresMatrix[i][j] = ', commonGenresMatrix[i][j])
+			    var qtip = {content: '<p>Genres shared by ' + sourceNode.data().name
+					+  ' and ' + targetNode.data().name + ':</p>'
+					+ '<ul>\n<li>' + commonGenresMatrix[i][j].join('</li>\n<li>') + '</li>\n</ul>',
+					position: {
+					    my: 'top center',
+					    at: 'bottom center'
+					},
+					show: {
+					    event: 'mouseover',
+					    solo: true
+					},
+					hide: {
+					    event: 'mouseout'
+					},
+					style: {
+					    classes: 'qtip-bootstrap',
+					    tip: {
+						width: 16,
+						height:8
+					    }
+					}}
+			    // https://stackoverflow.com/questions/20993149/how-to-add-tooltip-on-mouseover-event-on-nodes-in-graph-with-cytoscape-js
+			    $scope.cy.add({data: edge}).qtip(qtip);
 			}
 			
 		    }
@@ -426,7 +481,8 @@ angular.module('musicVizFunApp', [])
 		}
 	    }
 	    if (intersection.size == 0) {
-		return 0;
+		return {'simScore':0,
+			'intersection':[]};
 	    }
 	    var union = new Set(setOfGenres1);
 	    for (let elem of setOfGenres2) {
@@ -439,11 +495,24 @@ angular.module('musicVizFunApp', [])
 //		$log.log("Similarity between '" + artistNode1.data().name + "' and '" + artistNode2.data().name + "' = " + simScore);
 //		$log.log('Intersection: ', Array.from(intersection));
 //		$log.log('Union: ', Array.from(union));
-		return simScore;
+		return {'simScore':simScore,
+			'intersection': intersection};
 	    }
 	    else {
 		return 0;
 	    }
+	}
+
+	$scope.layoutArtists = function() {
+	    var colaLayout = {name : 'cola',
+			      refresh:5,
+			      maxSimulationTime: 5000,
+			      padding:70,
+			      nodeSpacing: function( node ){ return 10; }
+			     };
+	    $scope.cy.layout(colaLayout).run();
+	    $scope.cy.resize();
+	    $log.log("layed out graph");
 	}
 
 	$scope.initializeAudio = function(trackIndex) {

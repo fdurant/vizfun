@@ -37,7 +37,7 @@ app.get('/login', function(req, res) {
     res.cookie(stateKey, state);
 
     // your application requests authorization
-    var scope = 'user-read-private user-read-email';
+    var scope = 'user-read-private user-read-email playlist-read-private';
     res.redirect('https://accounts.spotify.com/authorize?' +
 		 querystring.stringify({
 		     response_type: 'code',
@@ -175,12 +175,12 @@ app.get('/playlists', function(req, res) {
 
 app.get('/playlist/:playlistid?', function(req, res) {
 
-    var currentUserId = req.cookies.spotifyCurrentUserId;
+    var playlistOwner = req.query.playlistowner;
     var playlistId = req.params.playlistid;
     
-    var playlist = spotifyApi.getPlaylistTracks(currentUserId, playlistId, req.query)
+    var playlist = spotifyApi.getPlaylistTracks(playlistOwner, playlistId, req.query)
 	.then(function(data) {
-	    console.log('Retrieved user playlist ' + playlistId + ': ');
+	    console.log('Retrieved playlist ' + playlistId + ' from user ' + playlistOwner + ': ');
 //	    console.log(util.inspect(data.body, false, null))
 	    res.send(data.body);
 	},function(err) {

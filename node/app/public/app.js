@@ -130,11 +130,11 @@ angular.module('musicVizFunApp', [])
 	    // Keeping this number very moderate, so that we can get all artists for these tracks in one single batch
 	    // (see variable batchOfArtistsIDs further below)
 	    var nrTracksPerDownload = 50
-	    return $scope.getPlaylistTracksByID(i, $scope.playlists[i].id,0,nrTracksPerDownload);
+	    return $scope.getPlaylistTracksByID(i, $scope.playlists[i].id, $scope.playlists[i].owner.id, 0 ,nrTracksPerDownload);
 	}
 
-	$scope.getPlaylistTracksByID = function(i,id,offset,increment) {
-	    var getPlaylistTracks = dataService.getPlaylistTracks(id,offset,increment)
+	$scope.getPlaylistTracksByID = function(i,id,owner,offset,increment) {
+	    var getPlaylistTracks = dataService.getPlaylistTracks(id,owner,offset,increment)
 		.then(function (response) {
 
 		    // Extend lists of playtracks
@@ -164,7 +164,7 @@ angular.module('musicVizFunApp', [])
 		    $log.log("playlistTracksByIDs = ", $scope.playlistTracksByIDs);
 		    if (response.data.next) {
 			// There's more => recursive call
-			$scope.getPlaylistTracksByID(i,id,offset+increment,increment);
+			$scope.getPlaylistTracksByID(i,id,owner,offset+increment,increment);
 		    }
 		    
 		});
@@ -645,8 +645,8 @@ angular.module('musicVizFunApp', [])
 	    return $http.get("/me");
 	}
 
-	this.getPlaylistTracks = function(playlistID, offset, limit) {
-	    return $http.get("/playlist/" + playlistID + "?offset=" + offset + "&limit=" + limit + "&fields=items,next");
+	this.getPlaylistTracks = function(playlistID, playlistOwner, offset, limit) {
+	    return $http.get("/playlist/" + playlistID + "?playlistowner=" + playlistOwner + "&offset=" + offset + "&limit=" + limit + "&fields=items,next");
 	}
 
 	this.getMultipleArtists = function (listOfArtistIDs) {

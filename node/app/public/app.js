@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('musicVizFunApp', [])
+angular.module('musicVizFunApp', ["angucomplete-alt"])
 
     // Inspired by https://stackoverflow.com/questions/18880737/how-do-i-use-rootscope-in-angular-to-store-variables
     .run(function($rootScope) {
@@ -70,6 +70,7 @@ angular.module('musicVizFunApp', [])
 
 	// We will be watching this variable for synchronization purposes
 	$scope.firstPlaylistHasBeenFullyDownloaded = false;
+	$scope.firstPlaylistTurnedIntoGraph = false;
 	
 	// List of strings
 	$scope.playlists = [];
@@ -108,7 +109,13 @@ angular.module('musicVizFunApp', [])
 			      $log.log('Retrieving playlists');
 			      $scope.getPlaylists = dataService.getPlaylists()
 				  .then(function (response) {
-				      $scope.playlists = response.data.items;
+				      // Exclude playlists without image url
+				      $log.log('response.data.items = ', response.data.items);
+				      for (var i=0; i<response.data.items.length; i++) {
+					  if (response.data.items[i].images && response.data.items[i].images[0] && response.data.items[i].images[0].url) {
+					      $scope.playlists.push(response.data.items[i]);
+					  }
+				      }
 				      $scope.checkboxModel = Array($scope.playlists.length).fill(false)
 				      for (var c=0; c<$scope.playlists.length; c++) { 
 					  if (c==0) {
@@ -234,7 +241,8 @@ angular.module('musicVizFunApp', [])
 	];
 	
 	$scope.cy = null;
-
+	$scope.artistNodes = [];
+	
 	$scope.initializeGraph = function(playlistIndex) {
 	    $scope.cy = cytoscape({
 		container:document.getElementById('cy'),
@@ -242,6 +250,7 @@ angular.module('musicVizFunApp', [])
 		layout: {name: 'random'},
 		style: $scope.graphStyle
 	    });
+	    $scope.cy.panzoom({});
 	}
 
 	$scope.addPlaylistArtistsToGraph = function(playlistIndex) {
@@ -316,14 +325,18 @@ angular.module('musicVizFunApp', [])
 			    });
 			    $log.log('Tapped ', this.data().name, this.data().id, this.data().trackIDs);
 			});
+			$scope.artistNodes.push(data);
 		    }
 		}
-
+		
 	    }
+
 	    $scope.cy.viewport({zoom: 1,
 				pan: {x:100, y:100}});
 	    $scope.cy.layout({name: 'random'}).run();
 	    $scope.cy.resize();
+	    $log.log("$scope.artistNodes = ", $scope.artistNodes);
+	    $scope.firstPlaylistTurnedIntoGraph = true;
 	    $log.log("Done running $scope.addPlaylistArtistsToGraph for playlist with index = " + playlistIndex);
 	}
 
@@ -331,8 +344,14 @@ angular.module('musicVizFunApp', [])
 		      function(newValue, oldValue) {
 			  $log.log('$scope.firstPlaylistHasBeenFullyDownloaded value was: ' + oldValue +' and now is: ' + newValue);
 			  if (newValue) {
-			      $scope.initializeGraph(0);
 			      $scope.addPlaylistArtistsToGraph(0);
+			  }
+		      });
+
+	$scope.$watch(function() {return $scope.firstPlaylistTurnedIntoGraph},
+		      function(newValue, oldValue) {
+			  $log.log('$scope.firstPlaylistTurnedIntoGraph value was: ' + oldValue +' and now is: ' + newValue);
+			  if (newValue) {
 			      $scope.addPlaylistTracksToGraph(0);
 			  }
 		      });

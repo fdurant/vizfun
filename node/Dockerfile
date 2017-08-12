@@ -22,7 +22,7 @@ ADD ./node/app /usr/src/app/
 RUN npm build
 
 # Expose the app port
-EXPOSE 8000
+#EXPOSE 8000
 
 # Start the app
 CMD npm start

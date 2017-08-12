@@ -1,46 +1,23 @@
 version: '2'
 services:
-  neo4j:
-    build:
-      context: .
-      dockerfile: neo4j/Dockerfile
-    container_name: vizfun-official_neo4j_plus_apoc
-    env_file:
-      - .env
-    environment:
-      - NEO4J_dbms_memory_heap_maxSize=1500M
-      - NEO4J_dbms_connectors_default__listen__address=0.0.0.0
-      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
-    cap_add:
-      - SYS_RESOURCE 
-    ports:
-      - "7474:7474"
-      - "7687:7687"
-    expose:
-      - "7687"
-    labels:
-      - "description=Neo4J graph database server, including APOC library"
-
-  neo4jloader:
-    build:
-      context: .
-      dockerfile: neo4jloader/Dockerfile
-    container_name: vizfun_neo4jloader
-    env_file:
-      - .env
-    links:
-      - neo4j
-
   node:
     build:
       context: .
       dockerfile: node/Dockerfile
     container_name: vizfun_node
-    ports:
-      - "80:8000"
     labels:
       - "description=node.js"
     env_file:
       - .env
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    container_name: vizfun_nginx
+    ports:
+      - "80:8080"
     links:
-      - neo4j
+      - "node"
+    labels:
+      - "description=nginx"

@@ -6,7 +6,9 @@ RUN rm -v /etc/nginx/nginx.conf
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
 
 # Just to try
-COPY nginx/public /usr/share/nginx/html/public
+COPY nginx/public /etc/nginx/html/public
 
 # Start in foreground
-CMD ["nginx", "-g", "daemon off;"]
+#CMD ["nginx", "-g", "daemon off;"]
+
+EXPOSE 80 443

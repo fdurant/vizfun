@@ -1,15 +1,26 @@
 'use strict';
 
-const express = require('express');
+var express = require('express');
 const morgan = require('morgan');
 const generateRandomString = require('./helpers/utils.js').generateRandomString;
 var request = require('request');
 var querystring = require('querystring');
 const util = require('util');
-var cookieParser = require('cookie-parser');
+
+// Session management with redis
+// Inspired by https://pragprog.com/book/kdnodesec/secure-your-node-js-web-application
+// Chapter 8: Focus on Session Management
+// See also https://github.com/rajaraodv/rabbitpubsub/issues/4
+var session = require('express-session');
+var RedisStore = require('connect-redis')(session);
+const redis_host = process.env.REDIS_HOST;
+const redis_port = process.env.REDIS_PORT;
+const redis_pwd = process.env.REDIS_PASSWORD;
+const redis_secret = process.env.REDIS_SECRET;
+
+// Spotify
 const SpotifyWebApi = require('spotify-web-api-node');
 var spotifyApi = new SpotifyWebApi({});
-
 const client_id = process.env.SPOTIFY_CLIENT_ID;
 const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
 const redirect_uri = process.env.APP_REDIRECT_PATH;
@@ -19,6 +30,7 @@ const PORT = 8000;
 
 // App
 var stateKey = 'spotify_auth_state';
+var cookieParser = require('cookie-parser'); // TO DO: Move cookies to REDIS store on server instead
 const app = express();
 
 app.use(morgan('dev'));
@@ -26,8 +38,24 @@ app.use(morgan('dev'));
 app.use(express.static(__dirname + '/public'))
     .use(cookieParser());
 
+app.use(session({
+    store: new RedisStore({
+	host:redis_host,
+	port:redis_port,
+	db: 2,
+	pass: redis_pwd
+    }),
+    secret:redis_secret,
+    resave:false,
+    saveUninitialized:true
+}));
+
 app.get('/', function (req, res) {
-    res.send('Hello world\n');
+    if (!req.session.views) {
+	req.session.views = 0;
+    }
+    req.session.views++;
+    res.send('Hello world (' + req.session.views + ' times so far)\n');
 });
 
 // Copied from https://github.com/spotify/web-api-auth-examples/blob/master/authorization_code/app.js

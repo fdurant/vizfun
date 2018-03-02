@@ -35,7 +35,6 @@ session.Session.prototype.login = function login(cb) {
 	req.session._loggedInAt = Date.now();
 	req.session._ip = req.ip;
 	req.session._ua = req.headers['user-agent'];
-//	req.session._spotifyApi = new SpotifyWebApi({});
 	cb();
     });
 }
@@ -181,8 +180,6 @@ app.get('/callback', function(req, res) {
     // your application requests refresh and access tokens
     // after checking the state parameter
 
-//    req.session.reload(function() {
-
     console.log('(/callback) req.session._spotify_auth_state = ', req.session._spotify_auth_state);
 
     var code = req.query.code || null;
@@ -220,10 +217,8 @@ app.get('/callback', function(req, res) {
 		var refresh_token = body.refresh_token;
 
 		// STORE AS SESSION VARIABLE FOR LATER USE
-		req.session._spotifyAccessTokenForMusicVizFun = access_token;
-		req.session._spotifyRefreshTokenForMusicVizFun = refresh_token;
-		spotifyApi.setAccessToken(access_token);
-		spotifyApi.setRefreshToken(refresh_token);
+		req.session._spotifyAccessToken = access_token;
+		req.session._spotifyRefreshToken = refresh_token;
 
 		// we can also pass the token to the browser to make requests from there
 /*		res.redirect('/#' +
@@ -245,11 +240,12 @@ app.get('/callback', function(req, res) {
 	});
     }
 	
-//    })
-
 });
 
 app.get('/me', function(req, res) {
+
+    spotifyApi.setAccessToken(req.session._spotifyAccessToken);
+    spotifyApi.setRefreshToken(req.session._spotifyRefreshToken);
 
     var me = spotifyApi.getMe()
 	.then(function(data) {
@@ -294,6 +290,9 @@ app.get('/refresh_token', function(req, res) {
 
 app.get('/playlists', function(req, res) {
 
+    spotifyApi.setAccessToken(req.session._spotifyAccessToken);
+    spotifyApi.setRefreshToken(req.session._spotifyRefreshToken);
+
     var currentUserId = req.session._spotifyCurrentUserId;
     
     var playlists = spotifyApi.getUserPlaylists(currentUserId)
@@ -311,6 +310,9 @@ app.get('/playlists', function(req, res) {
 });
 
 app.get('/playlist/:playlistid?', function(req, res) {
+
+    spotifyApi.setAccessToken(req.session._spotifyAccessToken);
+    spotifyApi.setRefreshToken(req.session._spotifyRefreshToken);
 
     var playlistOwner = req.query.playlistowner;
     var playlistId = req.params.playlistid;
@@ -331,6 +333,9 @@ app.get('/playlist/:playlistid?', function(req, res) {
 
 app.get('/artist/:artistid', function(req, res) {
 
+    spotifyApi.setAccessToken(req.session._spotifyAccessToken);
+    spotifyApi.setRefreshToken(req.session._spotifyRefreshToken);
+
     var artistId = req.params.artistid;
     
     var artist = spotifyApi.getArtist(artistId)
@@ -350,6 +355,9 @@ app.get('/artist/:artistid', function(req, res) {
 // Get multiple artists in one go. The response contains a.o. genre info about these artists
 // http://music.viz.fun/artists?aid=3mQBpAOMWYqAZyxtyeo4Lo&aid=3oZa8Xs6IjlIUGLAhVyK4G
 app.get('/artists?', function(req, res) {
+
+    spotifyApi.setAccessToken(req.session._spotifyAccessToken);
+    spotifyApi.setRefreshToken(req.session._spotifyRefreshToken);
 
     // First assemble the artist IDs in one array
     var artistIds = [];

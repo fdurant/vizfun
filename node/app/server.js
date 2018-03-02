@@ -35,6 +35,8 @@ session.Session.prototype.login = function login(cb) {
 	req.session._loggedInAt = Date.now();
 	req.session._ip = req.ip;
 	req.session._ua = req.headers['user-agent'];
+//	req.session._spotifyApi = new SpotifyWebApi({});
+	cb();
     });
 }
 
@@ -52,13 +54,20 @@ const PORT = 8000;
 
 // App
 var stateKey = 'spotify_auth_state';
-var cookieParser = require('cookie-parser'); // TO DO: Move cookies to REDIS store on server instead
+// var cookieParser = require('cookie-parser'); // TO DO: Move cookies to REDIS store on server instead
 const app = express();
 
 app.use(morgan('dev'));
 
-app.use(express.static(__dirname + '/public'))
-    .use(cookieParser());
+app.use(express.static(__dirname + '/public'));
+//    .use(cookieParser());
+
+app.use(function (req, res, next) {
+    res.header('Cache-Control', 'no-cache="Set-Cookie, Set-Cookie2"');
+    next();
+});
+
+app.set('trust proxy', 1) // trust first proxy
 
 app.use(session({
     store: new RedisStore({
@@ -74,12 +83,55 @@ app.use(session({
     resave:false,
     saveUninitialized:false,
     cookie: {
-	secure: true, // Set the cookie only to be served with HTTPS
+	secure: false, // Node.js serves to Nginx over HTTP, not HTTPS
 	path: '/',
 	httpOnly: true, // Mitigate XXS (cross-site scripts)
 	maxAge: null
     }
 }));
+
+
+// Check session information
+app.use(function (req, res, next) {
+
+    if(!req.session) { // If there is no session, then something is wrong
+	next(new Error('Session object missing'));
+	return;
+    }
+    else {
+	console.log("Found session:");
+	console.log(util.inspect(req.session, false, null))
+    }
+
+    if(req.session.isLoggedIn()) { // If not logged in then continue
+	console.log('User is already logged in');
+	next();
+	return;
+    }
+
+    if(req.session._ip !== req.ip) { // Check IP match
+	console.log("The request IP '" + req.ip + "' did not match the session IP '" + req.session.ip + "'");
+	// Generate a new unauthenticated session
+	req.session.regenerate(function() {
+	    next();
+	});
+	return;
+    }
+
+    if(req.session._ua !== req.headers['user-agent']) { // Check User Agent validity
+	console.log('The request User Agent did not match session user agent');
+	// Generate a new unauthenticated session
+	req.session.regenerate(function() {
+	    next();
+	});
+	return;
+    }
+
+    // Everything checks out so continue
+    console.log('Everything checks out');
+    next();
+    
+});
 
 app.get('/', function (req, res) {
     if (!req.session.views) {
@@ -92,31 +144,35 @@ app.get('/', function (req, res) {
 // Copied from https://github.com/spotify/web-api-auth-examples/blob/master/authorization_code/app.js
 app.get('/login', function(req, res) {
 
-    req.session.login();
+    req.session.login(function() {
+	
+	console.log('(/login) req.session = ', req.session);
+	var state = generateRandomString(16);
+//	res.cookie(stateKey, state);
+	console.log('state = ', state);
+	req.session._spotify_auth_state = state;
+	console.log('(/login) req.session._spotify_auth_state = ', req.session._spotify_auth_state);
+	
+	// your application requests authorization
+	var scope = 'user-read-private user-read-email playlist-read-private';
+	res.redirect('https://accounts.spotify.com/authorize?' +
+		     querystring.stringify({
+			 response_type: 'code',
+			 client_id: client_id,
+			 scope: scope,
+			 redirect_uri: redirect_uri,
+			 state: state,
+			 show_dialog: true
+		     }));
+    });
     
-    var state = generateRandomString(16);
-    res.cookie(stateKey, state);
-    console.log('state = ', state);
-    req.session._spotify_auth_state = state;
-    console.log('req.session._spotify_auth_state = ', req.session._spotify_auth_state);
-
-    // your application requests authorization
-    var scope = 'user-read-private user-read-email playlist-read-private';
-    res.redirect('https://accounts.spotify.com/authorize?' +
-		 querystring.stringify({
-		     response_type: 'code',
-		     client_id: client_id,
-		     scope: scope,
-		     redirect_uri: redirect_uri,
-		     state: state,
-		     show_dialog: true
-		 }));
 });
 
 app.get('/logout', function(req, res) {
-
+ 
     req.session.destroy(); // Delete session
-    
+    res.redirect('/#');
+
 });
 
 
@@ -125,14 +181,16 @@ app.get('/callback', function(req, res) {
     // your application requests refresh and access tokens
     // after checking the state parameter
 
+//    req.session.reload(function() {
+
+    console.log('(/callback) req.session._spotify_auth_state = ', req.session._spotify_auth_state);
+
     var code = req.query.code || null;
     var state = req.query.state || null;
     console.log('code = ', code);
     console.log('state = ', state);
-    console.log('req.session = ', req.session);
-    console.log('req.session._spotify_auth_state = ', req.session._spotify_auth_state);
-//    var storedState = req.session._spotify_auth_state ? req.session._spotify_auth_state : null;
-    var storedState = req.cookies ? req.cookies[stateKey] : null;
+    var storedState = req.session._spotify_auth_state ? req.session._spotify_auth_state : null;
+//    var storedState = req.cookies ? req.cookies[stateKey] : null;
     console.log('storedState = ', storedState);
 
     if (state === null || state !== storedState) {
@@ -141,7 +199,7 @@ app.get('/callback', function(req, res) {
 			 error: 'state_mismatch'
 		     }));
     } else {
-	res.clearCookie(stateKey);
+//	res.clearCookie(stateKey);
 	var authOptions = {
 	    url: 'https://accounts.spotify.com/api/token',
 	    form: {
@@ -186,6 +244,8 @@ app.get('/callback', function(req, res) {
 	    }
 	});
     }
+	
+//    })
 
 });
 
@@ -239,7 +299,7 @@ app.get('/playlists', function(req, res) {
     var playlists = spotifyApi.getUserPlaylists(currentUserId)
 	.then(function(data) {
 	    console.log('Retrieved user playlists: ');
-	    console.log(util.inspect(data.body, false, null))
+//	    console.log(util.inspect(data.body, false, null))
 	    res.send(data.body);
 	},function(err) {
 	    console.log('Could not get user playlists!', err);

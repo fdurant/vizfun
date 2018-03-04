@@ -246,12 +246,12 @@
 		   ng-show="currentArtistTrackIDs.length &gt; 0">
 
 	      <tr ng-repeat="trackID in currentArtistTrackIDs track by $index"
-		  ng-mouseover="updateTrackButtons($index,true);"
-		  ng-mouseleave="updateTrackButtons($index,false);">
+		  ng-mouseover="updateTrackButtons($index,true,trackID);"
+		  ng-mouseleave="updateTrackButtons($index,false,trackID);">
 		
 		<td id="{{'track-button-' + $index}}"
-		    ng-init="initializeTrackButtons($index);"
-		    ng-click="playOrStop($index)">
+		    ng-init="initializeTrackButtons($index,trackID);"
+		    ng-click="playOrStop($index,trackID)">
 		  <!-- Default button shown just after initialization -->
 		  <span ng-show="showMusicButtonForTrack[$index]"
 			class="glyphicon glyphicon-music"
@@ -266,11 +266,14 @@
 		  <span ng-show="showStopButtonForTrack[$index]"
 			class="glyphicon glyphicon-stop"
 			aria-hidden="true"></span>
+		  <span ng-show="showNotAvailableButtonForTrack[$index]"
+			class="glyphicon glyphicon-ban-circle"
+			aria-hidden="true"></span>
 		</td>
 
 		<td id="{{'track-name-' + $index}}"
-		  ng-mouseover="updateTrackButtons($index,true);"
-		  ng-mouseleave="updateTrackButtons($index,false);">
+		  ng-mouseover="updateTrackButtons($index,true,trackID);"
+		  ng-mouseleave="updateTrackButtons($index,false,trackID);">
 		  {{playlistTracksByIDs[trackID].track.name}}
 		</td>
 

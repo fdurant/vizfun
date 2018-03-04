@@ -92,6 +92,7 @@ angular.module('musicVizFunApp', ["angucomplete-alt"])
 	$scope.showPlayingButtonForTrack = []; // List of booleans 
 	$scope.showStopButtonForTrack = []; // List of booleans
 	$scope.showMusicButtonForTrack = []; // List of booleans
+	$scope.showNotAvailableButtonForTrack = []; // List of booleans
 
 	// audio
 	$scope.audioPlayer = null;
@@ -314,12 +315,12 @@ angular.module('musicVizFunApp', ["angucomplete-alt"])
 
 				$log.log("(2) $scope.currentTrackIndex", $scope.currentTrackIndex)
 				for (var t = 0; t<$scope.currentArtistTrackIDs.length; t++) {
-				    $scope.initializeTrackButtons(t);
+				    $scope.initializeTrackButtons(t,$scope.currentArtistTrackIDs[t]);
 				}
 
 				if ($scope.currentArtistTrackIDs.length > 0) {
 				    // Start playing the first one right away
-				    $scope.playOrStop(0);
+				    $scope.playOrStop(0,$scope.currentArtistTrackIDs[0]);
 				}
 				$log.log("(3) $scope.currentArtistTrackIDs", $scope.currentArtistTrackIDs)
 			    });
@@ -549,38 +550,55 @@ angular.module('musicVizFunApp', ["angucomplete-alt"])
 	    $log.log("URL for '" + $scope.playlistTracksByIDs[trackID].track.name + "' is " + trackUrl);
 	}
 
-	$scope.initializeTrackButtons = function(trackIndex) {
+	$scope.initializeTrackButtons = function(trackIndex,trackID) {
 	    $log.log("Running initializeTrackButtons(" + trackIndex + ")")
 	    $scope.showPlayButtonForTrack[trackIndex] = false; // List of booleans 
-	    $scope.showPlayingButtonForTrack[trackIndex] = trackIndex == 0 ? true : false; // List of booleans 
 	    $scope.showStopButtonForTrack[trackIndex] = false; // List of booleans
+	    if (! $scope.playlistTracksByIDs[trackID].track.preview_url) {
+		$log.log("No audio preview available for trackID = " + trackID);
+		$scope.showNotAvailableButtonForTrack[trackIndex] = true;
+		$scope.showPlayingButtonForTrack[trackIndex] = false;
+	    }
+	    else {
+		$scope.showPlayingButtonForTrack[trackIndex] = trackIndex == 0 ? true : false; // List of booleans 
+		$scope.showNotAvailableButtonForTrack[trackIndex] = false;
+	    }
 	    $scope.updateMusicButtonForTrack(trackIndex)
 	}
 
-	$scope.updateTrackButtons = function(trackIndex, entering) {
-	    if (entering) {
-		if ($scope.currentTrackIndex == trackIndex) {
-		    $scope.showPlayButtonForTrack[trackIndex] = false;
-		    $scope.showPlayingButtonForTrack[trackIndex] = false;
-		    $scope.showStopButtonForTrack[trackIndex] = true;	    
-		}
-		else {
-		    $scope.showPlayButtonForTrack[trackIndex] = true;
-		    $scope.showPlayingButtonForTrack[trackIndex] = false;
-		    $scope.showStopButtonForTrack[trackIndex] = false;
-		}
+	$scope.updateTrackButtons = function(trackIndex, entering, trackID) {
+	    if (! $scope.playlistTracksByIDs[trackID].track.preview_url) {
+		$log.log("No audio preview available for trackID = " + trackID);
+		$scope.showNotAvailableButtonForTrack[trackIndex] = true;
+		$scope.showPlayingButtonForTrack[trackIndex] = false;
 	    }
 	    else {
-		// Leaving
-		if ($scope.currentTrackIndex == trackIndex) {
-		    $scope.showPlayButtonForTrack[trackIndex] = false;
-		    $scope.showPlayingButtonForTrack[trackIndex] = true;
-		    $scope.showStopButtonForTrack[trackIndex] = false;
+		$scope.showNotAvailableButtonForTrack[trackIndex] = false;
+		$log.log("trackID = " + trackID);
+		if (entering) {
+		    if ($scope.currentTrackIndex == trackIndex) {
+			$scope.showPlayButtonForTrack[trackIndex] = false;
+			$scope.showPlayingButtonForTrack[trackIndex] = false;
+			$scope.showStopButtonForTrack[trackIndex] = true;	    
+		    }
+		    else {
+			$scope.showPlayButtonForTrack[trackIndex] = true;
+			$scope.showPlayingButtonForTrack[trackIndex] = false;
+			$scope.showStopButtonForTrack[trackIndex] = false;
+		    }
 		}
 		else {
-		    $scope.showPlayButtonForTrack[trackIndex] = false;
-		    $scope.showPlayingButtonForTrack[trackIndex] = false;
-		    $scope.showStopButtonForTrack[trackIndex] = false;
+		    // Leaving
+		    if ($scope.currentTrackIndex == trackIndex) {
+			$scope.showPlayButtonForTrack[trackIndex] = false;
+			$scope.showPlayingButtonForTrack[trackIndex] = true;
+			$scope.showStopButtonForTrack[trackIndex] = false;
+		    }
+		    else {
+			$scope.showPlayButtonForTrack[trackIndex] = false;
+			$scope.showPlayingButtonForTrack[trackIndex] = false;
+			$scope.showStopButtonForTrack[trackIndex] = false;
+		    }
 		}
 	    }
 	    $scope.updateMusicButtonForTrack(trackIndex)
@@ -590,10 +608,11 @@ angular.module('musicVizFunApp', ["angucomplete-alt"])
 	    $log.log("Running updateMusicButtonForTrack(" + trackIndex + ")")
 	    $scope.showMusicButtonForTrack[trackIndex] = !($scope.showPlayButtonForTrack[trackIndex] ||
 							   $scope.showPlayingButtonForTrack[trackIndex] ||
+							   $scope.showNotAvailableButtonForTrack[trackIndex] ||
 							   $scope.showStopButtonForTrack[trackIndex]);
 	}
 	    
-	$scope.playOrStop = function(trackIndex) {
+	$scope.playOrStop = function(trackIndex,trackID) {
 	    if (($scope.currentTrackIndex == trackIndex)
 		&& ($scope.showStopButtonForTrack[trackIndex] ||
 		    $scope.showPlayingButtonForTrack[trackIndex])) {
@@ -602,29 +621,35 @@ angular.module('musicVizFunApp', ["angucomplete-alt"])
 	    }
 	    else if (($scope.currentTrackIndex != trackIndex) && $scope.showPlayButtonForTrack[trackIndex]) {
 		$log.log("playOrStop (else if): About to run $scope.playPreview(" + trackIndex + ")")
-		$scope.playPreview(trackIndex);
+		$scope.playPreview(trackIndex,trackID);
 	    }
 	    else {
 		// Initialization of tracks for a newly tapped artist
 		$log.log("playOrStop (else): About to run $scope.playPreview(" + trackIndex + ")")
-		$scope.playPreview(0);
+		$scope.playPreview(0,trackID);
 	    }
 	}
 
-	$scope.playPreview = function(trackIndex) {
-	    // There can be only one preview playing at any time
-	    $scope.stopPreview($scope.currentTrackIndex, false);
+	$scope.playPreview = function(trackIndex, trackID) {
+	    if (! $scope.playlistTracksByIDs[trackID].track.preview_url) {
+		$log.log("No audio preview available for trackID = " + trackID);
+		$scope.showNotAvailableButtonForTrack[trackIndex] = true;
+	    }
+	    else {
+		// There can be only one preview playing at any time
+		$scope.stopPreview($scope.currentTrackIndex, false);
 
-	    $log.log("Start playing preview");
-	    $scope.initializeAudio(trackIndex);
-	    $scope.currentTrackPlaying = $scope.audioPlayer.play();
-	    $scope.currentTrackIndex = trackIndex;
-	    $log.log("$scope.currentTrackPlaying = ", $scope.currentTrackPlaying)
-	    $log.log("$scope.currentTrackIndex = ", $scope.currentTrackIndex)
-	    
-	    $scope.showPlayButtonForTrack[trackIndex] = false;
-	    $scope.showPlayingButtonForTrack[trackIndex] = true;
-	    $scope.showStopButtonForTrack[trackIndex] = false;
+		$log.log("Start playing preview");
+		$scope.initializeAudio(trackIndex);
+		$scope.currentTrackPlaying = $scope.audioPlayer.play();
+		$scope.currentTrackIndex = trackIndex;
+		$log.log("$scope.currentTrackPlaying = ", $scope.currentTrackPlaying)
+		$log.log("$scope.currentTrackIndex = ", $scope.currentTrackIndex)
+		
+		$scope.showPlayButtonForTrack[trackIndex] = false;
+		$scope.showPlayingButtonForTrack[trackIndex] = true;
+		$scope.showStopButtonForTrack[trackIndex] = false;
+	    }
 	    $scope.updateMusicButtonForTrack(trackIndex)
 	}
 

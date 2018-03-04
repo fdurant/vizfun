@@ -183,7 +183,7 @@
 
 	  <!--nav class="navbar navbar-playlist navbar-left" role="navigation"-->
 
-	    <div class="h3">Playlists</div>
+	    <div class="h3">{{playlists.length}} playlist{{playlists.length == 1 ? '' : 's'}}</div>
 	    <div id="selectable-playlist" class="form-group">
 
 	      <!-- Inspired by https://docs.angularjs.org/api/ng/input/input%5Bcheckbox%5D -->
@@ -312,9 +312,6 @@
     <!-- Include all compiled plugins (below), or inclide individual files as needed-->
     <script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 
-    <!-- Only using sigma.js, not Linkurious (= deprecated, now replaced with Ogma)-->
-    <!--script src="../bower_components/linkurious/dist/sigma.min.js"></script-->
-    
     <!-- Cytoscape and two layout extensions -->
     <script src="../bower_components/cytoscape/dist/cytoscape.min.js"></script>
     <script src="../bower_components/cytoscape-spread/cytoscape-spread.js"></script>

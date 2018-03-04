@@ -11,9 +11,7 @@ ADD ./node/app/*.json /usr/src/app/
 WORKDIR /usr/src/app
 RUN npm install -g bower && \
     npm install && \
-    bower install --config.interactive=false --allow-root && \
-    mv node_modules/linkurious bower_components/.
-
+    bower install --config.interactive=false --allow-root
 
 # Copy other node app related files
 ADD ./node/app /usr/src/app/

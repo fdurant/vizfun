@@ -153,7 +153,7 @@ angular.module('musicVizFunApp', ["angucomplete-alt"])
 		    var batchOfArtistsIDs = new Set();
 		    for (var j=0; j<response.data.items.length; j++) {
 			// Store each track for direct search by its ID
-//			$log.log("Adding '" + response.data.items[j].track.name + "' to playlistTracksByIDs")
+			//			$log.log("Adding '" + response.data.items[j].track.name + "' to playlistTracksByIDs")
 			$scope.playlistTracksByIDs[response.data.items[j].track.id] = response.data.items[j];
 			// There can be more than one artist per track
 			if (response.data.items[j].track && response.data.items[j].track.artists) {
@@ -545,7 +545,8 @@ angular.module('musicVizFunApp', ["angucomplete-alt"])
 		$log.log("Running audioEndHandler()");
 		$scope.stopPreview(trackIndex, false);
 	    });
-	    $log.log("Initialized audio for '" + $scope.playlistTracksByIDs[trackID].track.name + "' (trackID " + trackID);
+	    $log.log("Initialized audio for '" + $scope.playlistTracksByIDs[trackID].track.name + "' (trackID " + trackID + "'");
+	    $log.log("URL for '" + $scope.playlistTracksByIDs[trackID].track.name + "' is " + trackUrl);
 	}
 
 	$scope.initializeTrackButtons = function(trackIndex) {

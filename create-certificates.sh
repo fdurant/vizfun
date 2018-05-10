@@ -6,5 +6,6 @@ docker run -it --rm -p 443:443 -p 80:80 --name certbot \
   -v /data/letsencrypt:/data/letsencrypt \
   certbot/certbot \
   certonly \
-  --webroot --webroot-path=/data/letsencrypt \
-  --cert-name viz.fun -d viz.fun -d music.viz.fun
+  --cert-name viz.fun -d viz.fun -d music.viz.fun \
+  --standalone
+  #  --webroot --webroot-path=/data/letsencrypt \

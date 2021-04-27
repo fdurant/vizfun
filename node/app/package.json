@@ -16,7 +16,7 @@
 	"util": "0.10.3",
 	"cookie-parser": "1.4.3",
 	"likely":"0.2.0",
-	"connect-redis":"3.3.3",
+	"connect-redis":"4.0.0",
 	"express-session":"1.15.6"
     }
 }
